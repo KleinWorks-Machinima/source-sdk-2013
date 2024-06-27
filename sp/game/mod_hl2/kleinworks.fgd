@@ -1,0 +1,29 @@
+//===================| PROPERTY OF THE KLEINWORKS™ CORPORTATION®® |===================\\
+//
+// Purpose: KleinWorks game definition file (.fgd)
+//
+//===================| PROPERTY OF THE KLEINWORKS™ CORPORTATION®® |===================\\
+
+@include "base.fgd"
+
+
+
+
+
+//-------------------------------------------------------------------------
+//
+// Logic Entities
+//
+//-------------------------------------------------------------------------
+
+@PointClass base(Targetname) = entrec_interface : "Acts as an EntRec interface for Hammer, and supplies the EntRec control panel VGUI with information."
+[
+
+	//Inputs
+	input StartRecording(void) : "Start EntRec recording."
+	input StopRecording(void) : "Stop EntRec recording."
+	input AddEntToRecording(EHANDLE) : "Adds whatever entity is pointed to by the provided EHandle to EntRec recording selection."
+	
+]
+
+

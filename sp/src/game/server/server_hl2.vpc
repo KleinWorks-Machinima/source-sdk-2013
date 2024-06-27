@@ -108,7 +108,7 @@ $Project "Server (HL2)"
 			$File	"hl2\grenade_frag.cpp"
 			$File	"hl2\grenade_frag.h"
 			$File	"hl2\hl2_ai_network.cpp"
-			$File	"hl2\hl2_client.cpp"
+			$File	"hl2\hl2_client.cpp"	 [!$KLEINWORKS]
 			$File	"hl2\hl2_eventlog.cpp"
 			$File	"$SRCDIR\game\shared\hl2\hl2_gamerules.cpp"
 			$File	"$SRCDIR\game\shared\hl2\hl2_gamerules.h"

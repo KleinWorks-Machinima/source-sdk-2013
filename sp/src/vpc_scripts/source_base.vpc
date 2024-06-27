@@ -25,6 +25,18 @@ $Conditional NEW_RESPONSE_SYSTEM	"1" // Toggles the new Response System library 
 
 //-----------------------------------------------------------------------------
 
+
+//------------------------\\
+//| KLEINWORKS™ ADDITION |\\
+
+$Conditional KLEINWORKS   "1" // Mainly for automatically excluding hl2_client from builds
+
+//| KLEINWORKS™ ADDITION |\\
+//------------------------\\
+
+
+
+
 $Configuration "Debug"
 {
 	$Compiler
