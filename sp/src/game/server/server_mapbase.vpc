@@ -8,10 +8,17 @@ $Configuration
 {
 	$Compiler
 	{
+		$AdditionalIncludeDirectories		"$BASE;$SRCDIR\public\zmq\.;%SRCDIR\public\rapidjson\."
 		$PreprocessorDefinitions		"$BASE;ASW_PROJECTED_TEXTURES;DYNAMIC_RTT_SHADOWS;GLOWS_ENABLE"
 		$PreprocessorDefinitions		"$BASE;MAPBASE_VSCRIPT"		[$MAPBASE_VSCRIPT]
 		$PreprocessorDefinitions		"$BASE;NEW_RESPONSE_SYSTEM"		[$NEW_RESPONSE_SYSTEM]
 	}
+
+	$Linker
+	{
+		$AdditionalDependencies		"$BASE;Ws2_32.lib;Iphlpapi.lib;libzmq-v120-mt-s-4_3_6.lib;libzmq-v120-mt-4_3_6.lib;czmq.lib"
+	}
+
 }
 
 $Project
@@ -63,8 +70,8 @@ $Project
 			$File	"mapbase\ai_grenade.h"
 			$File	"mapbase\ai_monitor.cpp"
 			$File	"mapbase\ai_weaponmodifier.cpp"
-			$File	"mapbase\custom_weapon_factory.cpp"
-			$File	"mapbase\custom_weapon_factory.h"
+			$File   "mapbase\custom_weapon_factory.cpp"
+                        $File   "mapbase\custom_weapon_factory.h"
 			$File	"mapbase\closecaption_entity.cpp"
 			$File	"mapbase\datadesc_mod.cpp"
 			$File	"mapbase\datadesc_mod.h"
@@ -88,7 +95,7 @@ $Project
 			$File	"mapbase\SystemConvarMod.h"
 			$File	"mapbase\variant_tools.h"
 			$File	"mapbase\vgui_text_display.cpp"
-			$File	"mapbase\weapon_custom_hl2.cpp"
+			$File   "mapbase\weapon_custom_hl2.cpp"
 			
 			$File	"mapbase\logic_eventlistener.cpp"
 			$File	"mapbase\logic_register_activator.cpp"
@@ -114,10 +121,43 @@ $Project
 				$File	"$SRCDIR\game\shared\hl2mp\weapon_slam.h"
 			}
 		}
+		$Folder "KleinWorks"
+		{
+			$Folder "ZMQ"
+			{
+				$File "kleinworks\ZMQ\InSourceOutSource.cpp"
+				$File "kleinworks\ZMQ\SourceInProc.cpp"
+				$File "kleinworks\ZMQ\srcIPC_EntRec.cpp"
+				$File "kleinworks\ZMQ\srcIPCMessages.cpp"
+
+				$File "kleinworks\ZMQ\InSourceOutSource.h"
+				$File "kleinworks\ZMQ\SourceInProc.h"
+				$File "kleinworks\ZMQ\srcIPC_EntRec.h"
+				$File "kleinworks\ZMQ\srcIPCMessages.h"
+				$File "kleinworks\ZMQ\SourceIPC.h"
+			}
+			$File	"kleinworks\kleinworks_cleint.cpp" [$HL2]
+			$File	"kleinworks\czmq_baseentity.cpp"
+			$File	"kleinworks\czmq_pointcamera.cpp"
+			$File	"kleinworks\czmq_baseskeletal.cpp"
+			$File	"kleinworks\czmq_manager.cpp"
+			$File	"kleinworks\centrec_interface.cpp"
+			$File	"kleinworks\weapon_ent_selector.cpp"
+			$File	"kleinworks\kleinworks_cvars.cpp"
+
+			$File	"kleinworks\czmq_baseentity.h"
+			$File	"kleinworks\czmq_pointcamera.h"
+			$File	"kleinworks\czmq_baseskeletal.h"
+			$File	"kleinworks\czmq_manager.h"
+			$File	"kleinworks\kleinworks_cvars.h"
+		}
 	}
 
 	$Folder	"Link Libraries"
 	{
+		$Lib	"libzmq-v120-mt-4_3_6"
+		$Lib	"libzmq-v120-mt-s-4_3_6"
+		$Lib	"czmq"
 		$Lib	"vscript" [$MAPBASE_VSCRIPT]
 		$Lib	"responserules" [$NEW_RESPONSE_SYSTEM]
 	}

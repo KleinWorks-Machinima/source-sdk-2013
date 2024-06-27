@@ -69,8 +69,20 @@ $Project
 			$File	"mapbase\c_func_fake_worldportal.h"
 			$File	"mapbase\c_point_glow.cpp"
 			$File	"mapbase\c_vgui_text_display.cpp"
-			$File	"mapbase\c_weapon_custom_hl2.cpp"
+			$File   "mapbase\c_weapon_custom_hl2.cpp"
 			$File	"mapbase\mapbase_autocubemap.cpp"
+		}
+		$Folder "KleinWorks"
+		{
+			$Folder "VGUI"
+			{
+				$File "kleinworks\VGUI\vgui_entrec_controlpanel.cpp"
+
+				$File "kleinworks\VGUI\ientrec_controlpanel.h"
+			}
+
+			$File "kleinworks\c_entrec_interface.cpp"
+
 		}
 		
 		$Folder "HL2 DLL"
