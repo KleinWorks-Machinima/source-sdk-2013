@@ -385,8 +385,15 @@ int InSourceOutSource::InputReady(bool isInFuncLoop)
 			zmsg_t* inputReadyMessage = srcIPCMessage::InputReady_t::New(zframe_new(m_peer_routingID, 5));
 			assert(inputReadyMessage);
 
+<<<<<<< HEAD
 			int rc = zmsg_send(&inputReadyMessage, m_sockt_INPUT);
 			assert(rc != -1);
+=======
+			//int rc = zmsg_send(&inputReadyMessage, m_sockt_INPUT);
+			//assert(rc != -1);
+
+			zmsg_send(&inputReadyMessage, m_sockt_INPUT);
+>>>>>>> development
 
 
 
@@ -455,7 +462,13 @@ int InSourceOutSource::TransferData(bool isInFuncLoop)
 
 			zmsg_t* transferingDoneMessage = srcIPCMessage::TransferingDone_t::New(m_OUTPUT_tick_count);
 
+<<<<<<< HEAD
 			assert(zmsg_send(&transferingDoneMessage, m_sockt_OUTPUT) != -1);
+=======
+			//assert(zmsg_send(&transferingDoneMessage, m_sockt_OUTPUT) != -1);
+			zmsg_send(&transferingDoneMessage, m_sockt_OUTPUT);
+
+>>>>>>> development
 			//Msg("TransferData: Sent TRANSFERING_DONE message.\n");
 
 			m_isSendingOutput = false;
@@ -471,7 +484,12 @@ int InSourceOutSource::TransferData(bool isInFuncLoop)
 		zmsg_t* transferingDataMessage = srcIPCMessage::TransferingData_t::New(m_OUTPUT_tick_count, zframe_new(m_sending_metadata, strlen(m_sending_metadata)));
 
 
+<<<<<<< HEAD
 		assert(zmsg_send(&transferingDataMessage, m_sockt_OUTPUT) != -1);
+=======
+		//assert(zmsg_send(&transferingDataMessage, m_sockt_OUTPUT) != -1);
+		zmsg_send(&transferingDataMessage, m_sockt_OUTPUT);
+>>>>>>> development
 
 		//printf("TransferData: Sent TransferData message!\n");
 		return -1;
@@ -633,7 +651,13 @@ int InSourceOutSource::ReceiveData(bool isInFuncLoop)
 			//printf("ReceiveData: All messages received from peer, ending data transfer!\n");
 			zmsg_t* lastReceivedDataMessage = srcIPCMessage::ReceivedData_t::New(m_INPUT_tick_count, zframe_new(m_peer_routingID, 5));
 
+<<<<<<< HEAD
 			assert(zmsg_send(&lastReceivedDataMessage, m_sockt_INPUT) != -1);
+=======
+			//assert(zmsg_send(&lastReceivedDataMessage, m_sockt_INPUT) != -1);
+
+			zmsg_send(&lastReceivedDataMessage, m_sockt_INPUT);
+>>>>>>> development
 
 			m_isReceivingInput = false;
 			m_peerIsDoneTransfering = false;
@@ -652,7 +676,13 @@ int InSourceOutSource::ReceiveData(bool isInFuncLoop)
 
 		zmsg_t* receivedDataMessage = srcIPCMessage::ReceivedData_t::New(m_INPUT_tick_count, zframe_new(m_peer_routingID, 5));
 
+<<<<<<< HEAD
 		assert(zmsg_send(&receivedDataMessage, m_sockt_INPUT) != -1);
+=======
+		//assert(zmsg_send(&receivedDataMessage, m_sockt_INPUT) != -1);
+		zmsg_send(&receivedDataMessage, m_sockt_INPUT);
+
+>>>>>>> development
 		//printf("ReceiveData: Sent received data message!\n");
 	}
 
