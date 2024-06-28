@@ -186,8 +186,21 @@ void GameStartFrame(void)
 
 	gpGlobals->teamplay = (teamplay.GetInt() != 0);
 	
+
+	
 	/*========================*/
 	/*| KLEINWORKS™ ADDITION |*/
+
+	if (engine->IsPaused() == true)
+	{
+		if (g_CzmqManager.m_zmq_comms.m_isDoneTransfering || g_CzmqManager.m_zmq_comms.m_peerIsDoneTransfering) 
+		{
+			g_CzmqManager.OnTick();
+			return;
+		}
+		else
+			return;
+	}
 
 	g_CzmqManager.OnTick();
 	
