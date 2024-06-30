@@ -109,7 +109,7 @@ CEntRec_Interface::CEntRec_Interface()
 
 void CEntRec_Interface::StartRecording(inputdata_t &inputData)
 {
-	ConVar* kleinworksRecordCvar = cvar->FindVar("kleinworks_record");
+	ConVar* kleinworksRecordCvar = cvar->FindVar("KW_entrec_record");
 	if (kleinworksRecordCvar->GetBool() != true)
 		kleinworksRecordCvar->SetValue(true);
 
@@ -119,7 +119,7 @@ void CEntRec_Interface::StartRecording(inputdata_t &inputData)
 
 void CEntRec_Interface::StopRecording(inputdata_t &inputData)
 {
-	ConVar* kleinworksRecordCvar = cvar->FindVar("kleinworks_record");
+	ConVar* kleinworksRecordCvar = cvar->FindVar("KW_entrec_record");
 	if (kleinworksRecordCvar->GetBool() != false)
 		kleinworksRecordCvar->SetValue(false);
 }
