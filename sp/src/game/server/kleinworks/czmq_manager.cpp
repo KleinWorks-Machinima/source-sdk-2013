@@ -144,6 +144,10 @@ void CzmqManager::UpdateSelectedEntities()
 
 void CzmqManager::AddEntityToSelection(CBaseHandle hEntity)
 {
+	if (!hEntity.IsValid()) {
+		Warning("KleinWorks: ERROR! Something tried to select an invalid entity for recording. Either the entity doesn't exist or it's a Hammer entity.\n");
+		return;
+	}
 	CBaseEntity* pEntity = gEntList.GetBaseEntity(hEntity);
 
 	CzmqBaseEntity* zmqEntity = nullptr;
