@@ -149,7 +149,6 @@ CON_COMMAND(KW_entrec_picker_select, "Select whatever entity is in the Player's 
 		CBaseEntity* pEntity = FindEntityForward(pPlayer, true);
 		g_CzmqManager.AddEntityToSelection(pEntity->GetRefEHandle());
 
-		Msg("KleinWorks: Added entity named {%s} to EntRec selection!\n", pEntity->GetClassname());
 		return;
 	}
 	Msg("KleinWorks: Found no entities to add to EntRec selection.\n");
@@ -181,12 +180,30 @@ CON_COMMAND(KW_entrec_print_selected, "Prints the ID's of every entity currently
 
 CON_COMMAND(KW_entrec_remove_entity_from_selection, "Removes an entity from EntRec selection by ID.")
 {
-	if (args.ArgC() < 1 || args.Arg(1) == NULL)
+	if (args.ArgC() <= 1 || args.Arg(1) == NULL)
 	{
-		Msg("Usage: KW_entrec_remove_entity_from_selection <entity-ID>, where <entity-ID> is the ID (or name) of the entity you want to remove. Use KW_entrec_print_selected_entities for a list of selected entity's IDs\n");
+		Msg("Usage: KW_entrec_remove_entity_from_selection <entity-ID>, where <entity-ID> is the index of the entity on the entlist, or the name of the entity you want to remove. Use KW_entrec_print_selected_entities for a list of selected entity's IDs\n");
 		return;
 	}
 
+	std::string argStr = args.Arg(1);
+	// if every character in Arg(1) is a digit, try to delete entity at that index
+	if (std::all_of(argStr.begin(), argStr.end(), isdigit) == true) {
+		int entIndex = stoi(argStr);
+
+		if (int(g_CzmqManager.m_pSelected_EntitiesList.size()) < entIndex) {
+			Msg("KleinWorks: No entity at index [%d] in selected entities list.\n", entIndex);
+			return;
+		}
+
+		CzmqBaseEntity* pEnt = g_CzmqManager.m_pSelected_EntitiesList[entIndex].get();
+		g_CzmqManager.RemoveEntityFromSelection(pEnt);
+
+		return;
+	}
+
+
+	// otherwise, treat Arg(1) as an entity name and try to find the entity by name
 	for (int i = 0; i < int(g_CzmqManager.m_pSelected_EntitiesList.size()); i++) {
 		CzmqBaseEntity* pEnt = g_CzmqManager.m_pSelected_EntitiesList[i].get();
 
