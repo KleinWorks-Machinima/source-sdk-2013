@@ -141,3 +141,10 @@ bool CzmqBaseEntity::operator ==(const std::unique_ptr<CzmqBaseEntity> other) co
 	return false;
 }
 */
+bool CzmqBaseEntity::operator == (const CBaseHandle other) const
+{
+	if (mh_parent_entity == other)
+		return true;
+	else
+		return false;
+}

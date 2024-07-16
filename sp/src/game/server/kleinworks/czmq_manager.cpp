@@ -151,6 +151,15 @@ void CzmqManager::AddEntityToSelection(CBaseHandle hEntity)
 	CBaseEntity* pEntity = gEntList.GetBaseEntity(hEntity);
 
 	CzmqBaseEntity* zmqEntity = nullptr;
+	
+	for (auto& element : m_pSelected_EntitiesList)
+	{
+		if (*element.get() == hEntity) {
+			Msg("KleinWorks: Entity [%s] is already in EntRec selection!\n", pEntity->GetDebugName());
+			return;
+		}
+	}
+	
 
 	Msg("KleinWorks: adding entity with classname of [%s] to EntRec selection...\n", pEntity->GetClassname());
 	

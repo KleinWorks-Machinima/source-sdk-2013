@@ -69,8 +69,9 @@ public:
 
 	bool			operator ==(const CzmqBaseEntity&  other) const;
 	bool			operator ==(const CzmqBaseEntity*  other) const;
-	bool			operator ==(const CzmqBaseEntity	  other) const;
+	bool			operator ==(const CzmqBaseEntity   other) const;
 	//bool operator ==(const std::unique_ptr<CzmqBaseEntity> other) const;
+	bool			operator ==(const CBaseHandle      other) const;
 
 
 private:
