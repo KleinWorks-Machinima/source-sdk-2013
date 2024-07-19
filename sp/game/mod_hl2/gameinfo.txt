@@ -1,8 +1,8 @@
 "GameInfo"
 {
-	game 		"My First HL2 Mod"
-	title 		"HALF-LIFE'"
-	title2		""
+	game 		"KleinWorks: Machinima"
+	title 		"KleinWorks:"
+	title2		"Machinima"
 	supportsvr	1
 
 	type		singleplayer_only
