@@ -191,16 +191,22 @@ void GameStartFrame(void)
 	/*========================*/
 	/*| KLEINWORKS™ ADDITION |*/
 
-	if (engine->IsPaused() == true)
-	{
-		if (g_CzmqManager.m_zmq_comms.m_isDoneTransfering || g_CzmqManager.m_zmq_comms.m_peerIsDoneTransfering) 
-		{
-			g_CzmqManager.OnTick();
-			return;
-		}
-		else
-			return;
+
+	// if we are in the middle of stopping a recording, run anyway
+	if (g_CzmqManager.m_zmq_comms.m_isDoneTransfering || g_CzmqManager.m_zmq_comms.m_peerIsDoneTransfering) {
+
+		g_CzmqManager.OnTick();
+		return;
 	}
+	// if we are in the middle of starting a recording, run anyway
+	if (g_CzmqManager.m_zmq_comms.m_OUTPUT_tick_count <= 1) {
+
+		g_CzmqManager.OnTick();
+		return;
+	}
+
+	if (engine->IsPaused())
+		return;
 
 	g_CzmqManager.OnTick();
 	
