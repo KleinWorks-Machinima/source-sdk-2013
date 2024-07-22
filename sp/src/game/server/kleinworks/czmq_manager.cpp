@@ -161,7 +161,7 @@ void CzmqManager::AddEntityToSelection(CBaseHandle hEntity)
 	}
 	
 
-	Msg("KleinWorks: adding entity with classname of [%s] to EntRec selection...\n", pEntity->GetClassname());
+	Msg("KleinWorks: adding entity with name [%s] to EntRec selection...\n", pEntity->GetDebugName());
 	
 	if (strcmp( pEntity->GetClassname(), "player") == 0) {
 		CzmqPointCamera* pPointCam = new CzmqPointCamera(hEntity);
