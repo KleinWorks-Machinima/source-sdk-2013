@@ -164,19 +164,35 @@ CON_COMMAND(kw_entrec_reset_sockets, "Disconnects then reconnects all sockets, a
 
 extern CBaseEntity *FindEntityForward(CBasePlayer *pMe, bool fHull);
 
-CON_COMMAND(kw_entrec_select, "Select whatever entity is in the Player's crosshair for recording.")
+CON_COMMAND(kw_entrec_select, "Select an entity for recording by name. If no arguments are passed, selects any entity under the Player's crosshair.")
 {
 	CBasePlayer* pPlayer = UTIL_GetCommandClient();
 
-	if (FindEntityForward(pPlayer, true) != nullptr)
+	CBaseEntity* pEntityToSelect = nullptr;
+
+	if (args.ArgC() <= 1 || args.Arg(1) == NULL) 
 	{
-		CBaseEntity* pEntity = FindEntityForward(pPlayer, true);
-		g_CzmqManager.AddEntityToSelection(pEntity->GetRefEHandle());
+		if (FindEntityForward(pPlayer, true) != nullptr)
+		{
+			pEntityToSelect = FindEntityForward(pPlayer, true);
+			g_CzmqManager.AddEntityToSelection(pEntityToSelect->GetRefEHandle());
+
+			return;
+		}
+		Msg("KleinWorks: Found no entities under Player crosshair to add to EntRec selection.\n");
+		return;
+	}
+	
+	pEntityToSelect = gEntList.FindEntityByName(NULL, args.Arg(1));
+
+	if (pEntityToSelect != NULL) {
+		g_CzmqManager.AddEntityToSelection(pEntityToSelect->GetRefEHandle());
 
 		return;
 	}
-	Msg("KleinWorks: Found no entities to add to EntRec selection.\n");
 
+	Msg("KleinWorks: Found no entities named [%s] to add to EntRec selection.\n", args.Arg(1));
+	
 }
 
 
@@ -204,42 +220,58 @@ CON_COMMAND(kw_entrec_print, "Prints the ID's of every entity currently selected
 
 CON_COMMAND(kw_entrec_deselect, "Removes an entity from EntRec selection by ID.")
 {
+	CBasePlayer* pPlayer = UTIL_GetCommandClient();
+
+	CBaseEntity* pEntityToDeselect = nullptr;
+
+	const char* entToDeselectName = nullptr;
+
+	// if no arguments are passed, try to deselect any entities under Player's crosshair from selection
 	if (args.ArgC() <= 1 || args.Arg(1) == NULL)
 	{
-		Msg("Usage: kw_entrec_deselect <entity-ID>, where <entity-ID> is the index of the entity on the selection list, or the name of the entity you want to remove. Use 'kw_entrec_print' to view selected entities' names and their index on the selection list.\n");
-		return;
-	}
-
-	std::string argStr = args.Arg(1);
-	// if every character in Arg(1) is a digit, try to delete entity at that index
-	if (std::all_of(argStr.begin(), argStr.end(), isdigit) == true) {
-		int entIndex = stoi(argStr);
-
-		if (int(g_CzmqManager.m_pSelected_EntitiesList.size()) < entIndex) {
-			Msg("KleinWorks: No entity at index [%d] in selected entities list.\n", entIndex);
+		if (FindEntityForward(pPlayer, true) == nullptr) {
+			Msg("KleinWorks: Found no entities under Player crosshair to remove from EntRec selection.\n");
 			return;
 		}
 
-		CzmqBaseEntity* pEnt = g_CzmqManager.m_pSelected_EntitiesList[entIndex].get();
-		g_CzmqManager.RemoveEntityFromSelection(pEnt);
+		pEntityToDeselect = FindEntityForward(pPlayer, true);
 
-		return;
+		entToDeselectName = pEntityToDeselect->GetDebugName();
+	}
+	else {
+		std::string argStr = args.Arg(1);
+		// if every character in Arg(1) is a digit, try to delete entity at that index
+		if (std::all_of(argStr.begin(), argStr.end(), isdigit) == true) {
+			int entIndex = stoi(argStr);
+
+			if (int(g_CzmqManager.m_pSelected_EntitiesList.size()) <= entIndex) {
+				Msg("KleinWorks: No entity at index [%d] in selected entities list.\n", entIndex);
+				return;
+			}
+
+			CzmqBaseEntity* pEnt = g_CzmqManager.m_pSelected_EntitiesList[entIndex].get();
+			g_CzmqManager.RemoveEntityFromSelection(pEnt);
+
+			return;
+		}
+
+		entToDeselectName = args.Arg(1);
 	}
 
 
-	// otherwise, treat Arg(1) as an entity name and try to find the entity by name
+	// try to find the entity to deselect by name
 	for (int i = 0; i < int(g_CzmqManager.m_pSelected_EntitiesList.size()); i++) {
 		CzmqBaseEntity* pEnt = g_CzmqManager.m_pSelected_EntitiesList[i].get();
 
-		DevMsg(4, "KleinWorks_DEBUG: Checking ent #[%d]: ent_name - [%s] for match with arg [%s].\n", i, pEnt->m_ent_name, args.Arg(1));
+		DevMsg(4, "KleinWorks_DEBUG: Checking ent #[%d]: ent_name - [%s] for match with arg [%s].\n", i, pEnt->m_ent_name, entToDeselectName);
 
-		if (strcmp(pEnt->m_ent_name, args.Arg(1)) == 0) {
+		if (strcmp(pEnt->m_ent_name, entToDeselectName) == 0) {
 			g_CzmqManager.RemoveEntityFromSelection(pEnt);
 			return;
 		}
 	}
 
-	Msg("KleinWorks: Could not find any entities with ID of [%s] in EntRec selection!\n", args.Arg(1));
+	Msg("KleinWorks: Found no entities named [%s] to remove from EntRec selection.\n", args.Arg(1));
 }
 
 
