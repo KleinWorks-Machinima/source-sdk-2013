@@ -21,20 +21,73 @@
 extern CzmqManager g_CzmqManager;
 
 
-void HandleRecordCvarChanged(IConVar *var, const char *pOldValue, float flOldValue)
-{
-	bool value = ConVarRef(var).GetBool();
 
-	if (value == true)
+void HandleRecordUntilCvarChanged(IConVar *var, const char *pOldValue, float flOldValue)
+{
+	int value = ConVarRef(var).GetInt();
+
+	Msg("KleinWorks: Set maximum recorded tick from %d to %d!\n", g_CzmqManager.m_RecordUntil, value);
+	g_CzmqManager.m_RecordUntil = value;
+
+}
+
+ConVar cvar_kleinworks_record_rate("kw_entrec_record_until", "0", 0, "If set to a number higher than 0, will automatically stop recordings that reach the number specified. Set to 0 or below to disable.", true, 0, false, 0, &HandleRecordUntilCvarChanged);
+
+
+
+
+void HandleDropoutToleranceChanged(IConVar *var, const char *pOldValue, float flOldValue)
+{
+	int value = ConVarRef(var).GetInt();
+
+	Msg("KleinWorks: Set EntRec message drop-out tolerance from %d to %d!\n", g_CzmqManager.m_zmq_comms.m_drop_out_tolerance, value);
+	g_CzmqManager.m_zmq_comms.m_drop_out_tolerance = value;
+}
+
+ConVar cvar_kleinworks_dropout_tolerance("kw_entrec_message_dropout_tolerance", "-1", 0, "Adjusts how many messages without response it takes before EntRec declares that it's peer dropped out and abort data transfer. If set to -1, EntRec will ignore peer drop-outs. Set to -1 by default.", true, -1, false, 0, &HandleDropoutToleranceChanged);
+
+
+
+
+
+CON_COMMAND(kw_entrec_record, "Toggle for the KleinWorks EntRec system, 1 = recording, 0 = not recording.")
+{
+	bool recordBool = g_CzmqManager.record_toggle;
+
+	// If no arguments are passed, act like a toggle
+	if (args.ArgC() <= 1 || args.Arg(1) == NULL)
+		recordBool = !recordBool;
+
+	else {
+
+		std::string argStr = args.Arg(1);
+
+		// make sure every character in Arg(1) is a digit
+		if (std::all_of(argStr.begin(), argStr.end(), isdigit) != true)
+			return;
+
+		int argValue = stoi(argStr);
+
+		if (argValue >= 1)
+			recordBool = true;
+		else
+			recordBool = false;
+	}
+
+	// if record value is unchanged, do nothing
+	if (recordBool == g_CzmqManager.record_toggle)
+		return;
+
+
+	if (recordBool == true)
 	{
 
 		if (g_CzmqManager.m_zmq_comms.m_isDoneTransfering != false) {
 			Warning("KleinWorks: ERROR! Previous recording hasn't finished, unable to start new recording! Wait a bit or reset sockets and try again.\n");
-			cvar->FindVar("kleinworks_record")->SetValue(0);
-			g_CzmqManager.record_toggle = 0;
+			g_CzmqManager.record_toggle = false;
 			return;
 		}
-		Msg("KleinWorks: Started recording!\n");
+		Msg("KleinWorks: Attempting to start recording...\n");
 
 
 		// updating the entity metadata JSON object before starting to record
@@ -64,15 +117,17 @@ void HandleRecordCvarChanged(IConVar *var, const char *pOldValue, float flOldVal
 		// start transfering the data
 		g_CzmqManager.m_zmq_comms.TransferData();
 
-		g_CzmqManager.record_toggle = 1;
+		g_CzmqManager.record_toggle = true;
 
 		g_CzmqManager.record_frame_start = 0;
 		g_CzmqManager.record_frame_end = 0;
 	}
 
-	if (value == false)
+
+
+	if (recordBool == false)
 	{
-		g_CzmqManager.record_toggle = 0;
+		g_CzmqManager.record_toggle = false;
 
 		if (g_CzmqManager.m_zmq_comms.m_isDoneTransfering != false)
 			return;
@@ -84,44 +139,13 @@ void HandleRecordCvarChanged(IConVar *var, const char *pOldValue, float flOldVal
 			return;
 		g_CzmqManager.m_zmq_comms.m_isDoneTransfering = true;
 	}
-
-
 }
 
-ConVar cvar_kleinworks_record("KW_entrec_record", "0", 0, "Toggle for the KleinWorks EntRec system, 1 = recording, 0 = not recording.", true, 0, true, 1, &HandleRecordCvarChanged);
 
 
 
 
-void HandleRecordUntilCvarChanged(IConVar *var, const char *pOldValue, float flOldValue)
-{
-	int value = ConVarRef(var).GetInt();
-
-	Msg("KleinWorks: Set maximum recorded tick from %d to %d!\n", g_CzmqManager.m_RecordUntil, value);
-	g_CzmqManager.m_RecordUntil = value;
-
-}
-
-ConVar cvar_kleinworks_record_rate("KW_entrec_record_until", "0", 0, "If set to a number higher than 0, will automatically stop recordings that reach the number specified. Set to 0 or below to disable.", true, 0, false, 0, &HandleRecordUntilCvarChanged);
-
-
-
-void HandleDropoutToleranceChanged(IConVar *var, const char *pOldValue, float flOldValue)
-{
-	int value = ConVarRef(var).GetInt();
-
-	Msg("KleinWorks: Set EntRec message drop-out tolerance from %d to %d!\n", g_CzmqManager.m_zmq_comms.m_drop_out_tolerance, value);
-	g_CzmqManager.m_zmq_comms.m_drop_out_tolerance = value;
-}
-
-ConVar cvar_kleinworks_dropout_tolerance("KW_entrec_message_dropout_tolerance", "-1", 0, "Adjusts how many messages without response it takes before EntRec declares that it's peer dropped out and abort data transfer. If set to -1, EntRec will ignore peer drop-outs. Set to -1 by default.", true, -1, false, 0, &HandleDropoutToleranceChanged);
-
-
-
-
-
-
-CON_COMMAND(KW_entrec_reset_sockets, "Disconnects then reconnects all sockets, aborting any active/hanging data transfers.")
+CON_COMMAND(kw_entrec_reset_sockets, "Disconnects then reconnects all sockets, aborting any active/hanging data transfers.")
 {
 	Msg("KleinWorks: Reconnecting sockets...\n");
 
@@ -140,7 +164,7 @@ CON_COMMAND(KW_entrec_reset_sockets, "Disconnects then reconnects all sockets, a
 
 extern CBaseEntity *FindEntityForward(CBasePlayer *pMe, bool fHull);
 
-CON_COMMAND(KW_entrec_picker_select, "Select whatever entity is in the Player's crosshair for recording.")
+CON_COMMAND(kw_entrec_select, "Select whatever entity is in the Player's crosshair for recording.")
 {
 	CBasePlayer* pPlayer = UTIL_GetCommandClient();
 
@@ -159,7 +183,7 @@ CON_COMMAND(KW_entrec_picker_select, "Select whatever entity is in the Player's 
 
 
 
-CON_COMMAND(KW_entrec_print_selected, "Prints the ID's of every entity currently selected for EntRec recording.")
+CON_COMMAND(kw_entrec_print, "Prints the ID's of every entity currently selected for EntRec recording.")
 {
 	Msg("KleinWorks: Printing all entities from EntRec selection...\n\n");
 
@@ -178,11 +202,11 @@ CON_COMMAND(KW_entrec_print_selected, "Prints the ID's of every entity currently
 
 
 
-CON_COMMAND(KW_entrec_remove_entity_from_selection, "Removes an entity from EntRec selection by ID.")
+CON_COMMAND(kw_entrec_deselect, "Removes an entity from EntRec selection by ID.")
 {
 	if (args.ArgC() <= 1 || args.Arg(1) == NULL)
 	{
-		Msg("Usage: KW_entrec_remove_entity_from_selection <entity-ID>, where <entity-ID> is the index of the entity on the entlist, or the name of the entity you want to remove. Use KW_entrec_print_selected_entities for a list of selected entity's IDs\n");
+		Msg("Usage: kw_entrec_deselect <entity-ID>, where <entity-ID> is the index of the entity on the selection list, or the name of the entity you want to remove. Use 'kw_entrec_print' to view selected entities' names and their index on the selection list.\n");
 		return;
 	}
 
@@ -220,7 +244,7 @@ CON_COMMAND(KW_entrec_remove_entity_from_selection, "Removes an entity from EntR
 
 
 
-CON_COMMAND(KW_entrec_clear_entity_selection, "Removes every entity from EntRec selection.")
+CON_COMMAND(kw_entrec_deselect_all, "Removes every entity from EntRec selection.")
 {
 	Msg("KleinWorks: Attemping to clear EntRec entity selection...\n");
 
