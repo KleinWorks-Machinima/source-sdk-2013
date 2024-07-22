@@ -65,8 +65,10 @@ void CzmqManager::OnTick()
 		// If we have hit our m_RecordUntil cap, stop recording. If m_RecordUntil is negative then ignore it
 		if (m_zmq_comms.m_OUTPUT_tick_count >= m_RecordUntil && m_RecordUntil >= 1) {
 
-			cvar->FindVar("kleinworks_record")->SetValue(0);
-			record_toggle = 0;
+			engine->ServerCommand("kw_entrec_record 0\n");
+
+			Msg("KleinWorks: Ending recording...\n");
+			Msg("KleinWorks: Recorded from %d to %d\n", 0, m_zmq_comms.m_OUTPUT_tick_count);
 
 			if (m_zmq_comms.m_isSendingOutput == true)
 				m_zmq_comms.m_isDoneTransfering = true;
@@ -77,6 +79,8 @@ void CzmqManager::OnTick()
 
 		// If we are currently recording, update entities
 		if (m_zmq_comms.m_isSendingOutput == true) {
+			if (m_zmq_comms.m_OUTPUT_tick_count == 1)
+				Msg("KleinWorks: Connection established! Recording started!\n");
 			UpdateSelectedEntities();
 		}
 
