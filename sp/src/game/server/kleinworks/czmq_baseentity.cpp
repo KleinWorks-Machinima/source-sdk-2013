@@ -109,6 +109,20 @@ rapidjson::Value CzmqBaseEntity::GetEntityData(rapidjson::MemoryPoolAllocator<> 
 
 
 
+rapidjson::Value CzmqBaseEntity::GetEntityMetaData(rapidjson::MemoryPoolAllocator<> &allocator)
+{
+	rapidjson::Value entMetaData_js = rapidjson::Value(rapidjson::kObjectType);
+
+	entMetaData_js.AddMember("ent_name",      rapidjson::StringRef(m_ent_name), allocator);
+	entMetaData_js.AddMember("ent_type",      m_ent_type, allocator);
+	entMetaData_js.AddMember("ent_modelpath", rapidjson::StringRef(m_ent_model), allocator);
+
+	return entMetaData_js;
+}
+
+
+
+
 bool CzmqBaseEntity::operator == (const CzmqBaseEntity& other) const
 {
 	if (mh_parent_entity == other.mh_parent_entity)

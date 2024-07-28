@@ -153,6 +153,8 @@ void CzmqManager::AddEntityToSelection(CBaseHandle hEntity)
 		return;
 	}
 	CBaseEntity* pEntity = gEntList.GetBaseEntity(hEntity);
+	
+
 
 	CzmqBaseEntity* zmqEntity = nullptr;
 	
@@ -166,17 +168,31 @@ void CzmqManager::AddEntityToSelection(CBaseHandle hEntity)
 	
 
 	Msg("KleinWorks: adding entity with name [%s] to EntRec selection...\n", pEntity->GetDebugName());
+
+	rapidjson::Value entMetaData_js;
 	
 	if (strcmp( pEntity->GetClassname(), "player") == 0) {
 		CzmqPointCamera* pPointCam = new CzmqPointCamera(hEntity);
 		zmqEntity = pPointCam;
 
 		m_pSelected_EntitiesList.emplace_back(std::make_unique<CzmqPointCamera>(*pPointCam));
+
+		entMetaData_js = pPointCam->GetEntityMetaData(m_entity_metadata_js.GetAllocator());
+	}
+	else if (strcmp(pEntity->GetClassname(), "npc_metropolice") == 0) {
+		CzmqBaseSkeletal* pBaseSkel = new CzmqBaseSkeletal(hEntity);
+		zmqEntity = pBaseSkel;
+
+		m_pSelected_EntitiesList.emplace_back(std::make_unique<CzmqBaseSkeletal>(*pBaseSkel));
+
+		entMetaData_js = pBaseSkel->GetEntityMetaData(m_entity_metadata_js.GetAllocator());
 	}
 	else {
 		zmqEntity = new CzmqBaseEntity(hEntity);
 
 		m_pSelected_EntitiesList.emplace_back(std::make_unique<CzmqBaseEntity>(std::move(*zmqEntity)));
+
+		entMetaData_js = zmqEntity->GetEntityMetaData(m_entity_metadata_js.GetAllocator());
 	}
 
 	__hook(&CzmqBaseEntity::OnParentEntityDestroyed, zmqEntity, &CzmqManager::HandleSelectedEntityDestroyed);
@@ -184,14 +200,7 @@ void CzmqManager::AddEntityToSelection(CBaseHandle hEntity)
 	
 
 	// add the entity to the entity metadata JSON object
-	rapidjson::Value newEnt_js = rapidjson::Value(rapidjson::kObjectType);
-
-
-	newEnt_js.AddMember("ent_name",      rapidjson::StringRef(zmqEntity->m_ent_name),  m_entity_metadata_js.GetAllocator());
-	newEnt_js.AddMember("ent_type",		 zmqEntity->m_ent_type, m_entity_metadata_js.GetAllocator());
-	newEnt_js.AddMember("ent_modelpath", rapidjson::StringRef(zmqEntity->m_ent_model), m_entity_metadata_js.GetAllocator());
-	
-	m_entity_metadata_js["EntList"].PushBack(newEnt_js, m_entity_metadata_js.GetAllocator());
+	m_entity_metadata_js["EntList"].PushBack(entMetaData_js, m_entity_metadata_js.GetAllocator());
 
 }
 
@@ -200,7 +209,7 @@ void CzmqManager::AddEntityToSelection(CBaseHandle hEntity)
 void CzmqManager::RemoveEntityFromSelection(CzmqBaseEntity* pEntity)
 {
 	
-
+	
 
 	for (auto it = m_pSelected_EntitiesList.begin(); it != m_pSelected_EntitiesList.end(); it++) {
 

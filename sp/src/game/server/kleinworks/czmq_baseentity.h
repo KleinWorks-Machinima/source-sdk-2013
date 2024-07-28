@@ -66,6 +66,7 @@ public:
 public:
 
 	virtual rapidjson::Value   GetEntityData(rapidjson::MemoryPoolAllocator<> &allocator);
+	virtual rapidjson::Value   GetEntityMetaData(rapidjson::MemoryPoolAllocator<> &allocator);
 
 	bool			operator ==(const CzmqBaseEntity&  other) const;
 	bool			operator ==(const CzmqBaseEntity*  other) const;
