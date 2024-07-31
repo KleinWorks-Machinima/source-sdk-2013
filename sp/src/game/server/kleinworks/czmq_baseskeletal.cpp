@@ -85,30 +85,73 @@ rapidjson::Value CzmqBaseSkeletal::GetEntityData(rapidjson::MemoryPoolAllocator<
 
 	entData_js.AddMember("ent_name", rapidjson::StringRef(m_ent_name), allocator);
 
-	// have to do this little maneuver to avoid taking a reference of VecToString
 
-	Quaternion entQuatAngle;
+	// get ang/pos for every bone
 
-	AngleQuaternion(pSkelEntity->GetAbsAngles(), entQuatAngle);
+	CStudioHdr* pModelPtr = pSkelEntity->GetModelPtr();
 
-	// angles MUST be in quaternions, eulers cause a lot of problems
-	const char* quatAngleStr = static_cast<const char *>(CFmtStr("(%f, %f, %f, %f)", entQuatAngle.w, entQuatAngle.x, entQuatAngle.y, entQuatAngle.z));
+	CBoneCache* pBoneCache = pSkelEntity->GetBoneCache();
 
+	rapidjson::Value boneData_js = rapidjson::Value(rapidjson::kArrayType);
 
-
-	int absOriginStrlen = strlen(VecToString(pSkelEntity->GetAbsOrigin()));
-	int quatAnglesStrlen = strlen(quatAngleStr);
+	for (int i = 0; i != m_numbones + 1; i++) {
+		rapidjson::Value bone_js = rapidjson::Value(rapidjson::kObjectType);
 
 
-	char* entAbsOrigin_proxystr = new char[absOriginStrlen + 1];
-	char* entQuatAngles_proxystr = new char[quatAnglesStrlen + 1];
+		matrix3x4_t* boneToWorld = pBoneCache->GetCachedBone(i);
+
+		matrix3x4_t worldToBone;
+		matrix3x4_t local;
+
+		Vector bonePosition;
+		QAngle boneAngles;
+		Quaternion boneQuatAngles;
+
+		// converting worldspace to bonespace if this isn't the rootbone
+		if (i == 0) {
+
+			MatrixPosition(worldToBone, bonePosition);
+
+			MatrixToAngles(worldToBone, boneAngles);
+
+			AngleQuaternion(boneAngles, boneQuatAngles);
+		}
+		else {
+
+			int iParent = pModelPtr->boneParent(i);
+
+			MatrixInvert(boneToWorld[iParent], worldToBone);
+			ConcatTransforms(worldToBone, boneToWorld[i], local);
+
+			MatrixPosition(local, bonePosition);
+
+			MatrixToAngles(local, boneAngles);
+
+			AngleQuaternion(boneAngles, boneQuatAngles);
+		}
 
 
-	strcpy_s(entAbsOrigin_proxystr, absOriginStrlen + 1, VecToString(pSkelEntity->GetAbsOrigin()));
-	strcpy_s(entQuatAngles_proxystr, quatAnglesStrlen + 1, quatAngleStr);
 
-	entData_js.AddMember("VEC_ORIGIN", rapidjson::StringRef(entAbsOrigin_proxystr), allocator);
-	entData_js.AddMember("QANGLE_ANGLES", rapidjson::StringRef(entQuatAngles_proxystr), allocator);
+		const char* bonePosStr     = static_cast<const char *>(CFmtStr("(%f, %f, %f)",     bonePosition.x, bonePosition.y, bonePosition.z));
+		const char* boneQuatAngStr = static_cast<const char *>(CFmtStr("(%f, %f, %f, %f)", boneQuatAngles.w, boneQuatAngles.x, boneQuatAngles.y, boneQuatAngles.z));
+
+		// have to do this little maneuver to avoid taking a reference of the strings
+
+		char* bonePos_proxystr     = new char[strlen(bonePosStr)     + 1];
+		char* boneQuatAng_proxystr = new char[strlen(boneQuatAngStr) + 1];
+
+
+		strcpy_s(bonePos_proxystr,     strlen(bonePos_proxystr), bonePosStr);
+		strcpy_s(boneQuatAng_proxystr, strlen(boneQuatAngStr),   boneQuatAngStr);
+
+		bone_js.AddMember("POS", rapidjson::StringRef(bonePos_proxystr), allocator);
+		bone_js.AddMember("ROT", rapidjson::StringRef(boneQuatAng_proxystr), allocator);
+
+		boneData_js.PushBack(bone_js, allocator);
+	}
+
+
+	entData_js.AddMember("bonedata", boneData_js, allocator);
 
 
 	return entData_js;

@@ -12,6 +12,8 @@
 
 #include <vector>
 
+#include "bone_setup.h"
+
 #include "czmq_baseentity.h"
 
 
