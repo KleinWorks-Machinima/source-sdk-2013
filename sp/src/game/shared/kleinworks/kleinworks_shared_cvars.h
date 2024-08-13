@@ -52,7 +52,7 @@ void h_DropoutToleranceChanged(IConVar *var, const char *pOldValue, float flOldV
 ConVar cvar_kleinworks_record_until(
 		   /*pName*/	"kw_entrec_record_until",
    /*pDefaultValue*/	"0",
-		   /*flags*/	FCVAR_REPLICATED | FCVAR_HIDDEN,
+		   /*flags*/	FCVAR_REPLICATED,
 	 /*pHelpString*/	"If set to a number higher than 0, will automatically stop recordings that reach the number specified. Set to 0 or below to disable.",
 			/*bMin*/	true,
 			/*fMin*/	0,
@@ -64,7 +64,7 @@ ConVar cvar_kleinworks_record_until(
 ConVar cvar_kleinworks_dropout_tolerance(
 			/*pName*/	"kw_entrec_message_dropout_tolerance",
 	/*pDefaultValue*/	"-1",
-			/*flags*/	FCVAR_REPLICATED | FCVAR_HIDDEN,
+			/*flags*/	FCVAR_REPLICATED,
 	  /*pHelpString*/	"Adjusts how many messages without response it takes before EntRec declares a drop out and aborts data transfer. If set to -1, EntRec will ignore drop-outs. Set to -1 by default.",
 			 /*bMin*/	true,
 			 /*fMin*/	-1,

@@ -146,7 +146,6 @@ $Project
 			$File	"kleinworks\czmq_baseentity.h"
 			$File	"kleinworks\czmq_pointcamera.h"
 			$File	"kleinworks\czmq_baseskeletal.h"
-			$File	"kleinworks\kleinworks_cvars.h"
 
 			$File	"$SRCDIR\game\shared\kleinworks\kleinworks_shared_cvars.h"
 			$File	"$SRCDIR\game\shared\kleinworks\czmq_manager_shared.cpp"

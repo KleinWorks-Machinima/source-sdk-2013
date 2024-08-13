@@ -18,21 +18,24 @@
 
 // this is shared so thats why kleinworks/ is specified
 #ifdef CLIENT_DLL
+
+#define KW_OUTPUT_PORTNUM 5533
+
+
 #include "c_baseplayer.h"
 
 #include "kleinworks/c_zmq_baseentity.h"
 #include "kleinworks/c_zmq_pointcamera.h"
 #include "kleinworks/c_zmq_baseskeletal.h"
-/*
-typedef CzmqBaseEntity   (C_zmqBaseEntity);
-typedef CzmqPointCamera  (C_zmqPointCamera);
-typedef CzmqBaseSkeletal (C_zmqBaseSkeletal);
-*/
+
 
 #define CzmqBaseEntity   C_zmqBaseEntity
 #define CzmqPointCamera  C_zmqPointCamera
 #define CzmqBaseSkeletal C_zmqBaseSkeletal
 #else
+
+#define KW_OUTPUT_PORTNUM 5577
+
 #include "player.h"
 
 #include "kleinworks/czmq_baseentity.h"
@@ -66,7 +69,7 @@ public:
 	rapidjson::Document m_entity_metadata_js;
 
 	
-	srcIPC::EntRec m_zmq_comms = srcIPC::EntRec(5555, 5556);
+	srcIPC::EntRec m_zmq_comms = srcIPC::EntRec(5555, KW_INPUT_PORTNUM);
 
 
 	
