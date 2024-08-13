@@ -1,6 +1,6 @@
 //===================| PROPERTY OF THE KLEINWORKS™ CORPORTATION®® |===================\\
 //
-// Purpose: "Provides some controls for CzmqManager, and is used to update the EntRec
+// Purpose: "Provides some controls for C_zmqManager, and is used to update the EntRec
 //	control panel VGUI."
 //
 // 

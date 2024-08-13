@@ -10,30 +10,31 @@
 
 #include "cbase.h"
 
-#include "ZMQ\srcIPC_EntRec.h"
-#include "player.h"
+// ZMQ is shared which is why kleinworks/ is specified
+#include "kleinworks/ZMQ/srcIPC_EntRec.h"
+#include "c_baseplayer.h"
 #include "fmtstr.h"
 
 #include <algorithm>
 
-#include "czmq_baseentity.h"
-#include "czmq_pointcamera.h"
-#include "czmq_baseskeletal.h"
+#include "c_zmq_baseentity.h"
+#include "c_zmq_pointcamera.h"
+#include "c_zmq_baseskeletal.h"
 
 
 
 
 
 
-class CzmqManager
+class C_zmqManager
 {
 public:
-	CzmqManager();
-	~CzmqManager();
+	C_zmqManager();
+	~C_zmqManager();
 
 	/*======Member-Variables======*/
 public:
-	std::vector<std::unique_ptr<CzmqBaseEntity>> m_pSelected_EntitiesList;
+	std::vector<std::unique_ptr<C_zmqBaseEntity>> m_pSelected_EntitiesList;
 	
 	
 	int	 m_RecordUntil;
@@ -55,14 +56,14 @@ public:
 
 	void	UpdateSelectedEntities();
 
-	void	RemoveEntityFromSelection(CzmqBaseEntity* pEntity);
+	void	RemoveEntityFromSelection(C_zmqBaseEntity* pEntity);
 	void	AddEntityToSelection(CBaseHandle hEntity);
 
 
 	void	ClearEntitySelection();
 
 
-	void	HandleSelectedEntityDestroyed(CzmqBaseEntity* pCaller);
+	void	HandleSelectedEntityDestroyed(C_zmqBaseEntity* pCaller);
 
 
 };

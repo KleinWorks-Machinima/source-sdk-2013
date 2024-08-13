@@ -21,11 +21,12 @@
 
 #pragma warning(pop)
 
-#include "../baseentity.h"
-#include "../entitylist.h"
-#include "../entityapi.h"
+#include "../c_baseentity.h"
+#include "../cliententitylist.h"
+//#include "../entityapi.h"
 
 #include "fmtstr.h"
+
 
 
 
@@ -39,12 +40,12 @@ const enum class ENTREC_TYPES : int
 
 
 
-class CzmqBaseEntity : public IEntityListener
+class C_zmqBaseEntity : public IClientEntityListener
 {
 public:
-	CzmqBaseEntity(CBaseHandle hEntity);
-	CzmqBaseEntity();
-	~CzmqBaseEntity();
+	C_zmqBaseEntity(CBaseHandle hEntity);
+	C_zmqBaseEntity();
+	~C_zmqBaseEntity();
 
 	/*======Member-Variables======*/
 
@@ -59,7 +60,7 @@ public:
 	/*==========Events============*/
 
 
-	__event void OnParentEntityDestroyed(CzmqBaseEntity* pCaller);
+	__event void OnParentEntityDestroyed(C_zmqBaseEntity* pCaller);
 
 
 	/*======Member-Functions======*/
@@ -68,18 +69,19 @@ public:
 	virtual rapidjson::Value   GetEntityData(rapidjson::MemoryPoolAllocator<> &allocator);
 	virtual rapidjson::Value   GetEntityMetaData(rapidjson::MemoryPoolAllocator<> &allocator);
 
-	bool			operator ==(const CzmqBaseEntity&  other) const;
-	bool			operator ==(const CzmqBaseEntity*  other) const;
-	bool			operator ==(const CzmqBaseEntity   other) const;
-	//bool operator ==(const std::unique_ptr<CzmqBaseEntity> other) const;
+	bool			operator ==(const C_zmqBaseEntity&  other) const;
+	bool			operator ==(const C_zmqBaseEntity*  other) const;
+	bool			operator ==(const C_zmqBaseEntity   other) const;
+	//bool operator ==(const std::unique_ptr<C_zmqBaseEntity> other) const;
 	bool			operator ==(const CBaseHandle      other) const;
 
 
 private:
 
-	void OnEntityDeleted( CBaseEntity *pEntity ) override
+	void OnEntityDeleted( C_BaseEntity *pEntity ) override
 	{
-		if (pEntity->edict() != gEntList.GetBaseEntity(mh_parent_entity)->edict())
+
+		if (pEntity->GetEntityIndex() != cl_entitylist->GetBaseEntityFromHandle(mh_parent_entity)->GetEntityIndex())
 			return;
 
 		OnParentEntityDestroyed(this);

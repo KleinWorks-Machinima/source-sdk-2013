@@ -8,7 +8,7 @@
 
 
 #include "cbase.h"
-#include "czmq_manager.h"
+#include "c_zmq_manager.h"
 
 
 
@@ -17,7 +17,7 @@
 
 
 
-CzmqManager::CzmqManager()
+C_zmqManager::C_zmqManager()
 {
 
 	m_RecordUntil		= 0;
@@ -46,7 +46,7 @@ CzmqManager::CzmqManager()
 
 }
 
-CzmqManager::~CzmqManager()
+C_zmqManager::~C_zmqManager()
 {
 	delete &m_zmq_comms;
 
@@ -55,7 +55,7 @@ CzmqManager::~CzmqManager()
 
 
 
-void CzmqManager::OnTick()
+void C_zmqManager::OnTick()
 {
 
 
@@ -65,7 +65,7 @@ void CzmqManager::OnTick()
 		// If we have hit our m_RecordUntil cap, stop recording. If m_RecordUntil is negative then ignore it
 		if (m_zmq_comms.m_OUTPUT_tick_count >= m_RecordUntil && m_RecordUntil >= 1) {
 
-			engine->ServerCommand("kw_entrec_record 0\n");
+			engine->ClientCmd("kw_entrec_record 0\n");
 
 			Msg("KleinWorks: Ending recording...\n");
 			Msg("KleinWorks: Recorded from %d to %d\n", 0, m_zmq_comms.m_OUTPUT_tick_count);
@@ -106,7 +106,7 @@ void CzmqManager::OnTick()
 
 
 
-void CzmqManager::UpdateSelectedEntities()
+void C_zmqManager::UpdateSelectedEntities()
 {
 	// create a document representing all of our selected entity's data
 	rapidjson::Document entityData_js;
@@ -122,7 +122,7 @@ void CzmqManager::UpdateSelectedEntities()
 	{
 		if (!element)
 		{ // if a selected entity doesnt exist, print an error message
-			Warning("KleinWorks: Something went wrong! At line %d in CzmqManager.cpp, element was a nullptr! Skipping this element!\n", __LINE__ - 3);
+			Warning("KleinWorks: Something went wrong! At line %d in C_zmqManager.cpp, element was a nullptr! Skipping this element!\n", __LINE__ - 3);
 			continue;
 		}
 
@@ -146,17 +146,17 @@ void CzmqManager::UpdateSelectedEntities()
 
 
 
-void CzmqManager::AddEntityToSelection(CBaseHandle hEntity)
+void C_zmqManager::AddEntityToSelection(CBaseHandle hEntity)
 {
 	if (!hEntity.IsValid()) {
 		Warning("KleinWorks: ERROR! Something tried to select an invalid entity for recording. Either the entity doesn't exist or it's a Hammer entity.\n");
 		return;
 	}
-	CBaseEntity* pEntity = gEntList.GetBaseEntity(hEntity);
+	C_BaseEntity* pEntity = cl_entitylist->GetBaseEntityFromHandle(hEntity);
 	
 
 
-	CzmqBaseEntity* zmqEntity = nullptr;
+	C_zmqBaseEntity* zmqEntity = nullptr;
 	
 	for (auto& element : m_pSelected_EntitiesList)
 	{
@@ -172,30 +172,30 @@ void CzmqManager::AddEntityToSelection(CBaseHandle hEntity)
 	rapidjson::Value entMetaData_js;
 	
 	if (strcmp( pEntity->GetClassname(), "player") == 0) {
-		CzmqPointCamera* pPointCam = new CzmqPointCamera(hEntity);
+		C_zmqPointCamera* pPointCam = new C_zmqPointCamera(hEntity);
 		zmqEntity = pPointCam;
 
-		m_pSelected_EntitiesList.emplace_back(std::make_unique<CzmqPointCamera>(*pPointCam));
+		m_pSelected_EntitiesList.emplace_back(std::make_unique<C_zmqPointCamera>(*pPointCam));
 
 		entMetaData_js = pPointCam->GetEntityMetaData(m_entity_metadata_js.GetAllocator());
 	}
 	else if (strcmp(pEntity->GetClassname(), "npc_metropolice") == 0) {
-		CzmqBaseSkeletal* pBaseSkel = new CzmqBaseSkeletal(hEntity);
+		C_zmqBaseSkeletal* pBaseSkel = new C_zmqBaseSkeletal(hEntity);
 		zmqEntity = pBaseSkel;
 
-		m_pSelected_EntitiesList.emplace_back(std::make_unique<CzmqBaseSkeletal>(*pBaseSkel));
+		m_pSelected_EntitiesList.emplace_back(std::make_unique<C_zmqBaseSkeletal>(*pBaseSkel));
 
 		entMetaData_js = pBaseSkel->GetEntityMetaData(m_entity_metadata_js.GetAllocator());
 	}
 	else {
-		zmqEntity = new CzmqBaseEntity(hEntity);
+		zmqEntity = new C_zmqBaseEntity(hEntity);
 
-		m_pSelected_EntitiesList.emplace_back(std::make_unique<CzmqBaseEntity>(std::move(*zmqEntity)));
+		m_pSelected_EntitiesList.emplace_back(std::make_unique<C_zmqBaseEntity>(std::move(*zmqEntity)));
 
 		entMetaData_js = zmqEntity->GetEntityMetaData(m_entity_metadata_js.GetAllocator());
 	}
 
-	__hook(&CzmqBaseEntity::OnParentEntityDestroyed, zmqEntity, &CzmqManager::HandleSelectedEntityDestroyed);
+	__hook(&C_zmqBaseEntity::OnParentEntityDestroyed, zmqEntity, &C_zmqManager::HandleSelectedEntityDestroyed);
 
 	
 
@@ -206,7 +206,7 @@ void CzmqManager::AddEntityToSelection(CBaseHandle hEntity)
 
 
 
-void CzmqManager::RemoveEntityFromSelection(CzmqBaseEntity* pEntity)
+void C_zmqManager::RemoveEntityFromSelection(C_zmqBaseEntity* pEntity)
 {
 	
 	
@@ -229,7 +229,7 @@ void CzmqManager::RemoveEntityFromSelection(CzmqBaseEntity* pEntity)
 
 		Msg("KleinWorks: Removed entity [%s] from EntRec selection.\n", pEntity->m_ent_name);
 
-		__unhook(&CzmqBaseEntity::OnParentEntityDestroyed, pEntity, &CzmqManager::HandleSelectedEntityDestroyed);
+		__unhook(&C_zmqBaseEntity::OnParentEntityDestroyed, pEntity, &C_zmqManager::HandleSelectedEntityDestroyed);
 
 		it->reset();
 
@@ -243,10 +243,10 @@ void CzmqManager::RemoveEntityFromSelection(CzmqBaseEntity* pEntity)
 
 
 
-void CzmqManager::HandleSelectedEntityDestroyed(CzmqBaseEntity* pCaller)
+void C_zmqManager::HandleSelectedEntityDestroyed(C_zmqBaseEntity* pCaller)
 {
 	DevMsg(4, "KleinWorks_DEBUG: Destruction of entity [%s] detected! Removing entity from EntRec selection...\n", pCaller->m_ent_name);
-	__unhook(&CzmqBaseEntity::OnParentEntityDestroyed, pCaller, &CzmqManager::HandleSelectedEntityDestroyed);
+	__unhook(&C_zmqBaseEntity::OnParentEntityDestroyed, pCaller, &C_zmqManager::HandleSelectedEntityDestroyed);
 	RemoveEntityFromSelection(pCaller);
 	return;
 }
@@ -255,7 +255,7 @@ void CzmqManager::HandleSelectedEntityDestroyed(CzmqBaseEntity* pCaller)
 
 
 
-void CzmqManager::ClearEntitySelection()
+void C_zmqManager::ClearEntitySelection()
 {
 	DevMsg(4, "KleinWorks_DEBUG: [%d]\n", int(m_pSelected_EntitiesList.size()));
 	
@@ -268,7 +268,7 @@ void CzmqManager::ClearEntitySelection()
 
 		auto it = m_pSelected_EntitiesList.begin();
 
-		CzmqBaseEntity* pEnt = it->get();
+		C_zmqBaseEntity* pEnt = it->get();
 
 
 		// remove the entity from the entity metadata JSON object
@@ -285,7 +285,7 @@ void CzmqManager::ClearEntitySelection()
 		}
 
 
-		__unhook(&CzmqBaseEntity::OnParentEntityDestroyed, pEnt, &CzmqManager::HandleSelectedEntityDestroyed);
+		__unhook(&C_zmqBaseEntity::OnParentEntityDestroyed, pEnt, &C_zmqManager::HandleSelectedEntityDestroyed);
 
 		pEnt = NULL;
 
@@ -300,8 +300,8 @@ void CzmqManager::ClearEntitySelection()
 
 
 
-/*|"Initialization of global CzmqManager instance.."|*/
-CzmqManager g_CzmqManager = CzmqManager();
+/*|"Initialization of global C_zmqManager instance.."|*/
+C_zmqManager g_C_zmqManager = C_zmqManager();
 
 
 

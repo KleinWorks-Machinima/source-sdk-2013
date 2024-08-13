@@ -7,16 +7,16 @@
 //===================| PROPERTY OF THE KLEINWORKS™ CORPORTATION®® |===================\\
 
 #include "cbase.h"
-#include "czmq_baseentity.h"
+#include "c_zmq_baseentity.h"
 
 #include "mathlib/mathlib.h"
 
 
 
 
-CzmqBaseEntity::CzmqBaseEntity(CBaseHandle hEntity)
+C_zmqBaseEntity::C_zmqBaseEntity(ClientEntityHandle_t hEntity)
 {
-	CBaseEntity* pEntity = gEntList.GetBaseEntity(hEntity);
+	C_BaseEntity* pEntity = cl_entitylist->GetBaseEntityFromHandle(hEntity);
 
 	mh_parent_entity = hEntity;
 	m_ent_type		 = int(ENTREC_TYPES::BASE_ENTITY);
@@ -24,7 +24,7 @@ CzmqBaseEntity::CzmqBaseEntity(CBaseHandle hEntity)
 	// we have to do this to avoid taking a reference to GetDebugName() or GetModelName()
 
 	int ent_name_len = strlen(pEntity->GetDebugName());
-	int ent_modelname_len = strlen(pEntity->GetModelName().ToCStr());
+	int ent_modelname_len = strlen(pEntity->GetModelName());
 
 
 	char* ent_name_proxystr      = new char[ent_name_len + 1];
@@ -32,7 +32,7 @@ CzmqBaseEntity::CzmqBaseEntity(CBaseHandle hEntity)
 
 
 	strcpy_s(ent_name_proxystr, ent_name_len + 1, pEntity->GetDebugName());
-	strcpy_s(ent_modelname_proxystr, ent_modelname_len + 1, pEntity->GetModelName().ToCStr());
+	strcpy_s(ent_modelname_proxystr, ent_modelname_len + 1, pEntity->GetModelName());
 
 	
 	m_ent_name  = ent_name_proxystr;
@@ -41,11 +41,11 @@ CzmqBaseEntity::CzmqBaseEntity(CBaseHandle hEntity)
 
 	DevMsg(3, "KleinWorks_DEBUG: Entity of class %s initialized.\n", pEntity->GetClassname());
 
-	gEntList.AddListenerEntity(this);
+	cl_entitylist->AddListenerEntity(this);
 }
 
 
-CzmqBaseEntity::CzmqBaseEntity()
+C_zmqBaseEntity::C_zmqBaseEntity()
 {
 	mh_parent_entity = nullptr;
 	m_ent_type       = NULL;
@@ -56,9 +56,9 @@ CzmqBaseEntity::CzmqBaseEntity()
 
 
 
-CzmqBaseEntity::~CzmqBaseEntity()
+C_zmqBaseEntity::~C_zmqBaseEntity()
 {
-	gEntList.RemoveListenerEntity(this);
+	cl_entitylist->RemoveListenerEntity(this);
 	
 	if (mh_parent_entity != NULL) {
 		mh_parent_entity.Term();
@@ -69,10 +69,10 @@ CzmqBaseEntity::~CzmqBaseEntity()
 
 
 
-rapidjson::Value CzmqBaseEntity::GetEntityData(rapidjson::MemoryPoolAllocator<> &allocator)
+rapidjson::Value C_zmqBaseEntity::GetEntityData(rapidjson::MemoryPoolAllocator<> &allocator)
 {
 
-	CBaseEntity* pEntity = gEntList.GetBaseEntity(mh_parent_entity);
+	C_BaseEntity* pEntity = cl_entitylist->GetBaseEntityFromHandle(mh_parent_entity);
 
 	rapidjson::Value entData_js = rapidjson::Value(rapidjson::kObjectType);
 
@@ -109,7 +109,7 @@ rapidjson::Value CzmqBaseEntity::GetEntityData(rapidjson::MemoryPoolAllocator<> 
 
 
 
-rapidjson::Value CzmqBaseEntity::GetEntityMetaData(rapidjson::MemoryPoolAllocator<> &allocator)
+rapidjson::Value C_zmqBaseEntity::GetEntityMetaData(rapidjson::MemoryPoolAllocator<> &allocator)
 {
 	rapidjson::Value entMetaData_js = rapidjson::Value(rapidjson::kObjectType);
 
@@ -123,7 +123,7 @@ rapidjson::Value CzmqBaseEntity::GetEntityMetaData(rapidjson::MemoryPoolAllocato
 
 
 
-bool CzmqBaseEntity::operator == (const CzmqBaseEntity& other) const
+bool C_zmqBaseEntity::operator == (const C_zmqBaseEntity& other) const
 {
 	if (mh_parent_entity == other.mh_parent_entity)
 		return true;
@@ -131,7 +131,7 @@ bool CzmqBaseEntity::operator == (const CzmqBaseEntity& other) const
 		return false;
 }
 
-bool CzmqBaseEntity::operator == (const CzmqBaseEntity other) const
+bool C_zmqBaseEntity::operator == (const C_zmqBaseEntity other) const
 {
 	if (mh_parent_entity == other.mh_parent_entity)
 		return true;
@@ -139,7 +139,7 @@ bool CzmqBaseEntity::operator == (const CzmqBaseEntity other) const
 		return false;
 }
 
-bool CzmqBaseEntity::operator == (const CzmqBaseEntity* other) const
+bool C_zmqBaseEntity::operator == (const C_zmqBaseEntity* other) const
 {
 	if (mh_parent_entity == other->mh_parent_entity)
 		return true;
@@ -147,7 +147,7 @@ bool CzmqBaseEntity::operator == (const CzmqBaseEntity* other) const
 		return false;
 }
 /*
-bool CzmqBaseEntity::operator ==(const std::unique_ptr<CzmqBaseEntity> other) const
+bool C_zmqBaseEntity::operator ==(const std::unique_ptr<C_zmqBaseEntity> other) const
 {
 	if (other.get() == this)
 		return true;
@@ -155,7 +155,7 @@ bool CzmqBaseEntity::operator ==(const std::unique_ptr<CzmqBaseEntity> other) co
 	return false;
 }
 */
-bool CzmqBaseEntity::operator == (const CBaseHandle other) const
+bool C_zmqBaseEntity::operator == (const CBaseHandle other) const
 {
 	if (mh_parent_entity == other)
 		return true;

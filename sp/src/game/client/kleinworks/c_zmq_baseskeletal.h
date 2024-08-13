@@ -14,17 +14,17 @@
 
 #include "bone_setup.h"
 
-#include "czmq_baseentity.h"
+#include "c_zmq_baseentity.h"
 
 
 
 
 
-class CzmqBaseSkeletal : public CzmqBaseEntity
+class C_zmqBaseSkeletal : public C_zmqBaseEntity
 {
 public:
-	CzmqBaseSkeletal(CBaseHandle hEntity);
-	~CzmqBaseSkeletal();
+	C_zmqBaseSkeletal(CBaseHandle hEntity);
+	~C_zmqBaseSkeletal();
 
 
 

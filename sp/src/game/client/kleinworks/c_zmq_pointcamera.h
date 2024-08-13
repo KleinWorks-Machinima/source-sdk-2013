@@ -9,18 +9,18 @@
 #pragma once
 
 #include "cbase.h"
-#include "czmq_baseentity.h"
-#include "point_camera.h"
+#include "c_zmq_baseentity.h"
+#include "c_point_camera.h"
 
 
 
 
 
-class CzmqPointCamera : public CzmqBaseEntity
+class C_zmqPointCamera : public C_zmqBaseEntity
 {
 public:
-	CzmqPointCamera(CBaseHandle hEntity);
-	~CzmqPointCamera();
+	C_zmqPointCamera(CBaseHandle hEntity);
+	~C_zmqPointCamera();
 
 
 
