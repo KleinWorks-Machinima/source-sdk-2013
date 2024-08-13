@@ -113,13 +113,14 @@ $Project
 			$File	"kleinworks\c_zmq_baseentity.cpp"
 			$File	"kleinworks\c_zmq_pointcamera.cpp"
 			$File	"kleinworks\c_zmq_baseskeletal.cpp"
-			$File	"kleinworks\c_zmq_manager.cpp"
 
 			$File	"kleinworks\c_zmq_baseentity.h"
 			$File	"kleinworks\c_zmq_pointcamera.h"
 			$File	"kleinworks\c_zmq_baseskeletal.h"
-			$File	"kleinworks\c_zmq_manager.h"
-			$File	"kleinworks\kleinworks_client_cvars.h"
+
+			$File	"$SRCDIR\game\shared\kleinworks\kleinworks_shared_cvars.h"
+			$File	"$SRCDIR\game\shared\kleinworks\czmq_manager_shared.cpp"
+			$File	"$SRCDIR\game\shared\kleinworks\czmq_manager_shared.h"
 		}
 	}
 

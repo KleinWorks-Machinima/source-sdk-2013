@@ -140,15 +140,17 @@ $Project
 			$File	"kleinworks\czmq_baseentity.cpp"
 			$File	"kleinworks\czmq_pointcamera.cpp"
 			$File	"kleinworks\czmq_baseskeletal.cpp"
-			$File	"kleinworks\czmq_manager.cpp"
 			$File	"kleinworks\centrec_interface.cpp"
 			$File	"kleinworks\weapon_ent_selector.cpp"
 
 			$File	"kleinworks\czmq_baseentity.h"
 			$File	"kleinworks\czmq_pointcamera.h"
 			$File	"kleinworks\czmq_baseskeletal.h"
-			$File	"kleinworks\czmq_manager.h"
 			$File	"kleinworks\kleinworks_cvars.h"
+
+			$File	"$SRCDIR\game\shared\kleinworks\kleinworks_shared_cvars.h"
+			$File	"$SRCDIR\game\shared\kleinworks\czmq_manager_shared.cpp"
+			$File	"$SRCDIR\game\shared\kleinworks\czmq_manager_shared.h"
 		}
 	}
 

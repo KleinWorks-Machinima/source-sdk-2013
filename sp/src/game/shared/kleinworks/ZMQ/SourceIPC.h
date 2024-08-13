@@ -22,7 +22,7 @@
 #pragma warning(disable: 4005)
 #pragma warning(disable: 4003)
 
-#include <czmq/czmq.h>
+#include <zmq/czmq/czmq.h>
 #include <rapidjson/document.h>
 #include <rapidjson/reader.h>
 #include <rapidjson/writer.h>

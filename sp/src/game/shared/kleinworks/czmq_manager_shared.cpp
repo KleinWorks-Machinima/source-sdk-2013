@@ -8,9 +8,15 @@
 
 
 #include "cbase.h"
-#include "czmq_manager.h"
+#include "czmq_manager_shared.h"
 
+#ifdef CLIENT_DLL
+#define kleinworks_msg_header "kleinworks_cl:"
 
+#else
+#define kleinworks_msg_header "kleinworks_sv:"
+
+#endif // CLIENT_DLL
 
 
 
@@ -65,10 +71,10 @@ void CzmqManager::OnTick()
 		// If we have hit our m_RecordUntil cap, stop recording. If m_RecordUntil is negative then ignore it
 		if (m_zmq_comms.m_OUTPUT_tick_count >= m_RecordUntil && m_RecordUntil >= 1) {
 
-			engine->ServerCommand("kw_entrec_record 0\n");
+			SetRecording(false);
 
-			Msg("KleinWorks: Ending recording...\n");
-			Msg("KleinWorks: Recorded from %d to %d\n", 0, m_zmq_comms.m_OUTPUT_tick_count);
+			Msg(kleinworks_msg_header, " Ending recording...\n");
+			Msg(kleinworks_msg_header, " Recorded from %d to %d\n", 0, m_zmq_comms.m_OUTPUT_tick_count);
 
 			if (m_zmq_comms.m_isSendingOutput == true)
 				m_zmq_comms.m_isDoneTransfering = true;
@@ -80,7 +86,7 @@ void CzmqManager::OnTick()
 		// If we are currently recording, update entities
 		if (m_zmq_comms.m_isSendingOutput == true) {
 			if (m_zmq_comms.m_OUTPUT_tick_count == 1)
-				Msg("KleinWorks: Connection established! Recording started!\n");
+				Msg(kleinworks_msg_header, " Connection established! Recording started!\n");
 			UpdateSelectedEntities();
 		}
 
@@ -103,6 +109,79 @@ void CzmqManager::OnTick()
 
 
 
+void CzmqManager::SetRecording(bool recordBool)
+{
+
+	// if record value is unchanged, do nothing
+	if (recordBool == record_toggle)
+		return;
+
+
+	if (recordBool == true)
+	{
+
+		if (m_zmq_comms.m_isDoneTransfering != false) {
+			Warning("KleinWorks: ERROR! Previous recording hasn't finished, unable to start new recording! Wait a bit or reset sockets and try again.\n");
+			record_toggle = false;
+			return;
+		}
+		Msg(kleinworks_msg_header, " Attempting to start recording...\n");
+
+
+		// updating the entity metadata JSON object before starting to record
+		rapidjson::StringBuffer buffer;
+		rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
+		m_entity_metadata_js.Accept(writer);
+
+
+		DevMsg(3, kleinworks_msg_header, "_DEBUG: Metadata Message: %s\n", buffer.GetString());
+
+		const char* pEntMetaDataStr = buffer.GetString();
+
+		// Allocate memory for the destination pointers
+		char* proxy_sending_metadata = new char[strlen(pEntMetaDataStr) + 1];
+
+
+		// Copy the strings using std::strcpy
+		strcpy_s(proxy_sending_metadata, strlen(pEntMetaDataStr) + 1, pEntMetaDataStr);
+
+
+		m_zmq_comms.m_sending_metadata = proxy_sending_metadata;
+
+
+
+		UpdateSelectedEntities();
+
+		// start transfering the data
+		m_zmq_comms.TransferData();
+
+		record_toggle = true;
+
+		record_frame_start = 0;
+		record_frame_end = 0;
+	}
+
+
+
+	if (recordBool == false)
+	{
+		record_toggle = false;
+
+		if (m_zmq_comms.m_isDoneTransfering != false)
+			return;
+
+		Msg(kleinworks_msg_header, " Ending recording...\n");
+		Msg(kleinworks_msg_header, " Recorded from %d to %d\n", 0, m_zmq_comms.m_OUTPUT_tick_count);
+
+		if (m_zmq_comms.m_isSendingOutput != true)
+			return;
+		m_zmq_comms.m_isDoneTransfering = true;
+	}
+}
+
+
+
+
 
 
 
@@ -120,6 +199,7 @@ void CzmqManager::UpdateSelectedEntities()
 	// iterate through each entity we have selected
 	for (auto& element : m_pSelected_EntitiesList)
 	{
+
 		if (!element)
 		{ // if a selected entity doesnt exist, print an error message
 			Warning("KleinWorks: Something went wrong! At line %d in CzmqManager.cpp, element was a nullptr! Skipping this element!\n", __LINE__ - 3);
@@ -137,7 +217,7 @@ void CzmqManager::UpdateSelectedEntities()
 	rapidjson::StringBuffer entDataStrBuffer;
 	rapidjson::Writer<rapidjson::StringBuffer> writer(entDataStrBuffer);
 	entityData_js.Accept(writer);
-
+	
 	// add the stringified entity data document to the current data buffer
 	m_zmq_comms.m_sending_data_buffer = zframe_new(entDataStrBuffer.GetString(), strlen(entDataStrBuffer.GetString()));
 }
@@ -152,8 +232,12 @@ void CzmqManager::AddEntityToSelection(CBaseHandle hEntity)
 		Warning("KleinWorks: ERROR! Something tried to select an invalid entity for recording. Either the entity doesn't exist or it's a Hammer entity.\n");
 		return;
 	}
+
+#ifdef CLIENT_DLL
+	CBaseEntity* pEntity = cl_entitylist->GetBaseEntity(hEntity.GetEntryIndex());
+#else
 	CBaseEntity* pEntity = gEntList.GetBaseEntity(hEntity);
-	
+#endif // CLIENT_DLL
 
 
 	CzmqBaseEntity* zmqEntity = nullptr;
@@ -161,13 +245,13 @@ void CzmqManager::AddEntityToSelection(CBaseHandle hEntity)
 	for (auto& element : m_pSelected_EntitiesList)
 	{
 		if (*element.get() == hEntity) {
-			Msg("KleinWorks: Entity [%s] is already in EntRec selection!\n", pEntity->GetDebugName());
+			Msg(kleinworks_msg_header, " Entity [%s] is already in EntRec selection!\n", pEntity->GetDebugName());
 			return;
 		}
 	}
 	
 
-	Msg("KleinWorks: adding entity with name [%s] to EntRec selection...\n", pEntity->GetDebugName());
+	Msg(kleinworks_msg_header, " adding entity with name [%s] to EntRec selection...\n", pEntity->GetDebugName());
 
 	rapidjson::Value entMetaData_js;
 	
@@ -227,7 +311,7 @@ void CzmqManager::RemoveEntityFromSelection(CzmqBaseEntity* pEntity)
 			
 		}
 
-		Msg("KleinWorks: Removed entity [%s] from EntRec selection.\n", pEntity->m_ent_name);
+		Msg(kleinworks_msg_header, " Removed entity [%s] from EntRec selection.\n", pEntity->m_ent_name);
 
 		__unhook(&CzmqBaseEntity::OnParentEntityDestroyed, pEntity, &CzmqManager::HandleSelectedEntityDestroyed);
 

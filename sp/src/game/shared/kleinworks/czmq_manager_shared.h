@@ -10,15 +10,36 @@
 
 #include "cbase.h"
 
-#include "ZMQ\srcIPC_EntRec.h"
-#include "player.h"
+#include "ZMQ/srcIPC_EntRec.h"
 #include "fmtstr.h"
 
 #include <algorithm>
 
-#include "czmq_baseentity.h"
-#include "czmq_pointcamera.h"
-#include "czmq_baseskeletal.h"
+
+// this is shared so thats why kleinworks/ is specified
+#ifdef CLIENT_DLL
+#include "c_baseplayer.h"
+
+#include "kleinworks/c_zmq_baseentity.h"
+#include "kleinworks/c_zmq_pointcamera.h"
+#include "kleinworks/c_zmq_baseskeletal.h"
+/*
+typedef CzmqBaseEntity   (C_zmqBaseEntity);
+typedef CzmqPointCamera  (C_zmqPointCamera);
+typedef CzmqBaseSkeletal (C_zmqBaseSkeletal);
+*/
+
+#define CzmqBaseEntity   C_zmqBaseEntity
+#define CzmqPointCamera  C_zmqPointCamera
+#define CzmqBaseSkeletal C_zmqBaseSkeletal
+#else
+#include "player.h"
+
+#include "kleinworks/czmq_baseentity.h"
+#include "kleinworks/czmq_pointcamera.h"
+#include "kleinworks/czmq_baseskeletal.h"
+
+#endif // CLIENT_DLL
 
 
 
@@ -61,6 +82,7 @@ public:
 
 	void	ClearEntitySelection();
 
+	void    SetRecording(bool value);
 
 	void	HandleSelectedEntityDestroyed(CzmqBaseEntity* pCaller);
 
