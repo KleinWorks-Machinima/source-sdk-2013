@@ -72,18 +72,6 @@ $Project
 			$File   "mapbase\c_weapon_custom_hl2.cpp"
 			$File	"mapbase\mapbase_autocubemap.cpp"
 		}
-		$Folder "KleinWorks"
-		{
-			$Folder "VGUI"
-			{
-				$File "kleinworks\VGUI\vgui_entrec_controlpanel.cpp"
-
-				$File "kleinworks\VGUI\ientrec_controlpanel.h"
-			}
-
-			$File "kleinworks\c_entrec_interface.cpp"
-
-		}
 		
 		$Folder "HL2 DLL"
 		{
@@ -99,6 +87,39 @@ $Project
 				$File	"$SRCDIR\game\shared\hl2mp\weapon_slam.cpp"
 				$File	"$SRCDIR\game\shared\hl2mp\weapon_slam.h"
 			}
+		}
+		$Folder "KleinWorks"
+		{
+			$Folder "VGUI"
+			{
+				$File "kleinworks\VGUI\vgui_entrec_controlpanel.cpp"
+
+				$File "kleinworks\VGUI\ientrec_controlpanel.h"
+			}
+			$Folder "ZMQ"
+			{
+				$File "$SRCDIR\game\shared\kleinworks\ZMQ\InSourceOutSource.cpp"
+				$File "$SRCDIR\game\shared\kleinworks\ZMQ\SourceInProc.cpp"
+				$File "$SRCDIR\game\shared\kleinworks\ZMQ\srcIPC_EntRec.cpp"
+				$File "$SRCDIR\game\shared\kleinworks\ZMQ\srcIPCMessages.cpp"
+
+				$File "$SRCDIR\game\shared\kleinworks\ZMQ\InSourceOutSource.h"
+				$File "$SRCDIR\game\shared\kleinworks\ZMQ\SourceInProc.h"
+				$File "$SRCDIR\game\shared\kleinworks\ZMQ\srcIPC_EntRec.h"
+				$File "$SRCDIR\game\shared\kleinworks\ZMQ\srcIPCMessages.h"
+				$File "$SRCDIR\game\shared\kleinworks\ZMQ\SourceIPC.h"
+			}
+			$File   "kleinworks\c_entrec_interface.cpp"
+			$File	"kleinworks\c_zmq_baseentity.cpp"
+			$File	"kleinworks\c_zmq_pointcamera.cpp"
+			$File	"kleinworks\c_zmq_baseskeletal.cpp"
+			$File	"kleinworks\c_zmq_manager.cpp"
+
+			$File	"kleinworks\c_zmq_baseentity.h"
+			$File	"kleinworks\c_zmq_pointcamera.h"
+			$File	"kleinworks\c_zmq_baseskeletal.h"
+			$File	"kleinworks\c_zmq_manager.h"
+			$File	"kleinworks\kleinworks_client_cvars.h"
 		}
 	}
 

@@ -125,16 +125,16 @@ $Project
 		{
 			$Folder "ZMQ"
 			{
-				$File "kleinworks\ZMQ\InSourceOutSource.cpp"
-				$File "kleinworks\ZMQ\SourceInProc.cpp"
-				$File "kleinworks\ZMQ\srcIPC_EntRec.cpp"
-				$File "kleinworks\ZMQ\srcIPCMessages.cpp"
+				$File "$SRCDIR\game\shared\kleinworks\ZMQ\InSourceOutSource.cpp"
+				$File "$SRCDIR\game\shared\kleinworks\ZMQ\SourceInProc.cpp"
+				$File "$SRCDIR\game\shared\kleinworks\ZMQ\srcIPC_EntRec.cpp"
+				$File "$SRCDIR\game\shared\kleinworks\ZMQ\srcIPCMessages.cpp"
 
-				$File "kleinworks\ZMQ\InSourceOutSource.h"
-				$File "kleinworks\ZMQ\SourceInProc.h"
-				$File "kleinworks\ZMQ\srcIPC_EntRec.h"
-				$File "kleinworks\ZMQ\srcIPCMessages.h"
-				$File "kleinworks\ZMQ\SourceIPC.h"
+				$File "$SRCDIR\game\shared\kleinworks\ZMQ\InSourceOutSource.h"
+				$File "$SRCDIR\game\shared\kleinworks\ZMQ\SourceInProc.h"
+				$File "$SRCDIR\game\shared\kleinworks\ZMQ\srcIPC_EntRec.h"
+				$File "$SRCDIR\game\shared\kleinworks\ZMQ\srcIPCMessages.h"
+				$File "$SRCDIR\game\shared\kleinworks\ZMQ\SourceIPC.h"
 			}
 			$File	"kleinworks\kleinworks_cleint.cpp" [$HL2]
 			$File	"kleinworks\czmq_baseentity.cpp"
@@ -143,7 +143,6 @@ $Project
 			$File	"kleinworks\czmq_manager.cpp"
 			$File	"kleinworks\centrec_interface.cpp"
 			$File	"kleinworks\weapon_ent_selector.cpp"
-			$File	"kleinworks\kleinworks_cvars.cpp"
 
 			$File	"kleinworks\czmq_baseentity.h"
 			$File	"kleinworks\czmq_pointcamera.h"
