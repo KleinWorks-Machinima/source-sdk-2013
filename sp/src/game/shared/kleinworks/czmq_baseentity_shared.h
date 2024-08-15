@@ -67,6 +67,7 @@ public:
 
 	int			   m_ent_type;
 	int			   m_ent_id;
+	int			   m_ent_parent_id;
 	const char*    m_ent_name;
 	const char*    m_ent_model;
 
@@ -111,7 +112,3 @@ private:
 
 
 };
-
-#ifdef CLIENT_DLL
-#else
-#endif // CLIENT_DLL

@@ -42,6 +42,8 @@ CzmqBaseEntity::CzmqBaseEntity(CBaseHandle hEntity)
 	strcpy_s(ent_modelname_proxystr, ent_modelname_len + 1, modelName);
 
 
+
+
 	m_ent_name		 = ent_name_proxystr;
 	m_ent_model		 = ent_modelname_proxystr;
 
@@ -94,7 +96,13 @@ rapidjson::Value CzmqBaseEntity::GetEntityData(rapidjson::MemoryPoolAllocator<> 
 
 	rapidjson::Value entData_js = rapidjson::Value(rapidjson::kObjectType);
 
-	entData_js.AddMember("ent_name", rapidjson::StringRef(m_ent_name), allocator);
+	// avoid taking a reference to the ID string by copying it
+	int	  id_strlen = strlen(CFmtStr("%d", m_ent_id)) + 1;
+
+	char* ent_id = new char[id_strlen];
+	strcpy_s(ent_id, id_strlen, CFmtStr("%d", m_ent_id).String());
+
+	entData_js.AddMember("ent_id", rapidjson::StringRef(ent_id), allocator);
 
 	
 
@@ -130,6 +138,14 @@ rapidjson::Value CzmqBaseEntity::GetEntityData(rapidjson::MemoryPoolAllocator<> 
 rapidjson::Value CzmqBaseEntity::GetEntityMetaData(rapidjson::MemoryPoolAllocator<> &allocator)
 {
 	rapidjson::Value entMetaData_js = rapidjson::Value(rapidjson::kObjectType);
+
+	// avoid taking a reference to the ID string by copying it
+	int	  id_strlen = strlen(CFmtStr("%d", m_ent_id)) + 1;
+
+	char* ent_id = new char[id_strlen];
+	strcpy_s(ent_id, id_strlen, CFmtStr("%d", m_ent_id).String());
+
+	entMetaData_js.AddMember("ent_id", rapidjson::StringRef(ent_id), allocator);
 
 	entMetaData_js.AddMember("ent_name",      rapidjson::StringRef(m_ent_name), allocator);
 	entMetaData_js.AddMember("ent_type",      m_ent_type, allocator);

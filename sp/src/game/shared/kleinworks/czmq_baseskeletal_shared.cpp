@@ -105,7 +105,13 @@ rapidjson::Value CzmqBaseSkeletal::GetEntityData(rapidjson::MemoryPoolAllocator<
 
 	rapidjson::Value entData_js = rapidjson::Value(rapidjson::kObjectType);
 
-	entData_js.AddMember("ent_name", rapidjson::StringRef(m_ent_name), allocator);
+	// avoid taking a reference to the ID string by copying it
+	int	  id_strlen = strlen(CFmtStr("%d", m_ent_id)) + 1;
+
+	char* ent_id = new char[id_strlen];
+	strcpy_s(ent_id, id_strlen, CFmtStr("%d", m_ent_id).String());
+
+	entData_js.AddMember("ent_id", rapidjson::StringRef(ent_id), allocator);
 
 
 	// get ang/pos for every bone
@@ -245,6 +251,18 @@ rapidjson::Value CzmqBaseSkeletal::GetEntityMetaData(rapidjson::MemoryPoolAlloca
 {
 	rapidjson::Value entMetaData_js = rapidjson::Value(rapidjson::kObjectType);
 
+	// avoid taking a reference to the ID string by copying it
+	int	  id_strlen		 = strlen(CFmtStr("%d", m_ent_id)) + 1;
+	int	  numbone_strlen = strlen(CFmtStr("%d", m_numbones)) + 1;
+
+	char* ent_id = new char[id_strlen];
+	char* numbones_str = new char[numbone_strlen];
+
+	strcpy_s(ent_id, id_strlen, CFmtStr("%d", m_ent_id).String());
+	strcpy_s(numbones_str, numbone_strlen, CFmtStr("%d", numbones_str).String());
+
+	entMetaData_js.AddMember("ent_id", rapidjson::StringRef(ent_id), allocator);
+	entMetaData_js.AddMember("ent_numbones", rapidjson::StringRef(numbones_str), allocator);
 	entMetaData_js.AddMember("ent_name", rapidjson::StringRef(m_ent_name), allocator);
 	entMetaData_js.AddMember("ent_type", m_ent_type, allocator);
 	entMetaData_js.AddMember("ent_modelpath", rapidjson::StringRef(m_ent_model), allocator);
