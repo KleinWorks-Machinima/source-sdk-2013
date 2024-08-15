@@ -36,20 +36,6 @@ CzmqManager::CzmqManager()
 	m_zmq_comms.m_drop_out_tolerance = -1;
 	m_zmq_comms.m_pollerTimeout      = 0;
 
-
-
-	//======-Json Object Initialization-======\\
-
-	
-	m_entity_metadata_js.SetObject();
-
-
-	rapidjson::Value entArray(rapidjson::kArrayType);
-
-
-	m_entity_metadata_js.AddMember("EntList", entArray, m_entity_metadata_js.GetAllocator());
-
-
 }
 
 CzmqManager::~CzmqManager()
@@ -72,9 +58,6 @@ void CzmqManager::OnTick()
 		if (m_zmq_comms.m_OUTPUT_tick_count >= m_RecordUntil && m_RecordUntil >= 1) {
 
 			SetRecording(false);
-
-			Msg(kleinworks_msg_header, " Ending recording...\n");
-			Msg(kleinworks_msg_header, " Recorded from %d to %d\n", 0, m_zmq_comms.m_OUTPUT_tick_count);
 
 			if (m_zmq_comms.m_isSendingOutput == true)
 				m_zmq_comms.m_isDoneTransfering = true;
@@ -128,10 +111,10 @@ void CzmqManager::SetRecording(bool recordBool)
 		Msg(kleinworks_msg_header, " Attempting to start recording...\n");
 
 
-		// updating the entity metadata JSON object before starting to record
+		// updating the entity metadata before starting to record
 		rapidjson::StringBuffer buffer;
 		rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
-		m_entity_metadata_js.Accept(writer);
+		GetEntityMetadata().Accept(writer);
 
 
 		DevMsg(3, kleinworks_msg_header, "_DEBUG: Metadata Message: %s\n", buffer.GetString());
@@ -261,7 +244,6 @@ void CzmqManager::AddEntityToSelection(CBaseHandle hEntity)
 
 		m_pSelected_EntitiesList.emplace_back(std::make_unique<CzmqPointCamera>(*pPointCam));
 
-		entMetaData_js = pPointCam->GetEntityMetaData(m_entity_metadata_js.GetAllocator());
 	}
 	else if (strcmp(pEntity->GetClassname(), "npc_metropolice") == 0) {
 		CzmqBaseSkeletal* pBaseSkel = new CzmqBaseSkeletal(hEntity);
@@ -269,22 +251,17 @@ void CzmqManager::AddEntityToSelection(CBaseHandle hEntity)
 
 		m_pSelected_EntitiesList.emplace_back(std::make_unique<CzmqBaseSkeletal>(*pBaseSkel));
 
-		entMetaData_js = pBaseSkel->GetEntityMetaData(m_entity_metadata_js.GetAllocator());
 	}
 	else {
 		zmqEntity = new CzmqBaseEntity(hEntity);
 
 		m_pSelected_EntitiesList.emplace_back(std::make_unique<CzmqBaseEntity>(std::move(*zmqEntity)));
 
-		entMetaData_js = zmqEntity->GetEntityMetaData(m_entity_metadata_js.GetAllocator());
 	}
 
 	__hook(&CzmqBaseEntity::OnParentEntityDestroyed, zmqEntity, &CzmqManager::HandleSelectedEntityDestroyed);
 
-	
 
-	// add the entity to the entity metadata JSON object
-	m_entity_metadata_js["EntList"].PushBack(entMetaData_js, m_entity_metadata_js.GetAllocator());
 
 }
 
@@ -300,16 +277,6 @@ void CzmqManager::RemoveEntityFromSelection(CzmqBaseEntity* pEntity)
 		if (strcmp(pEntity->m_ent_name, it->get()->m_ent_name) != 0)
 			continue;
 
-		// remove the entity from the entity metadata JSON object
-		for (auto entity = m_entity_metadata_js["EntList"].Begin(); entity != m_entity_metadata_js["EntList"].End(); entity++) {
-
-			if (strcmp(entity->FindMember("ent_name")->value.GetString(), pEntity->m_ent_name) == 0) {
-				m_entity_metadata_js["EntList"].Erase(entity);
-				DevMsg(4, "KleinWorks_DEBUG: Removed entity [%s] from metadata_js.\n", pEntity->m_ent_name);
-				break;
-			}
-			
-		}
 
 		Msg(kleinworks_msg_header, " Removed entity [%s] from EntRec selection.\n", pEntity->m_ent_name);
 
@@ -329,7 +296,7 @@ void CzmqManager::RemoveEntityFromSelection(CzmqBaseEntity* pEntity)
 
 void CzmqManager::HandleSelectedEntityDestroyed(CzmqBaseEntity* pCaller)
 {
-	DevMsg(4, "KleinWorks_DEBUG: Destruction of entity [%s] detected! Removing entity from EntRec selection...\n", pCaller->m_ent_name);
+	DevMsg(4, kleinworks_msg_header, "_DEBUG: Destruction of entity [%s] detected! Removing entity from EntRec selection...\n", pCaller->m_ent_name);
 	__unhook(&CzmqBaseEntity::OnParentEntityDestroyed, pCaller, &CzmqManager::HandleSelectedEntityDestroyed);
 	RemoveEntityFromSelection(pCaller);
 	return;
@@ -341,32 +308,18 @@ void CzmqManager::HandleSelectedEntityDestroyed(CzmqBaseEntity* pCaller)
 
 void CzmqManager::ClearEntitySelection()
 {
-	DevMsg(4, "KleinWorks_DEBUG: [%d]\n", int(m_pSelected_EntitiesList.size()));
+	DevMsg(4, kleinworks_msg_header, "_DEBUG: [%d]\n", int(m_pSelected_EntitiesList.size()));
 	
 
 	int size = int(m_pSelected_EntitiesList.size());
 
 	for (int i = 0; i != size; i++) {
 
-		DevMsg(4, "KleinWorks_DEBUG: [%d]\n", i);
+		DevMsg(4, kleinworks_msg_header, "_DEBUG: [%d]\n", i);
 
 		auto it = m_pSelected_EntitiesList.begin();
 
 		CzmqBaseEntity* pEnt = it->get();
-
-
-		// remove the entity from the entity metadata JSON object
-		for (int i = 0; i != int(m_entity_metadata_js["EntList"].Size()); i++) {
-
-			auto entity = m_entity_metadata_js["EntList"].Begin();
-
-			if (strcmp(entity->FindMember("ent_name")->value.GetString(), pEnt->m_ent_name) == 0) {
-				m_entity_metadata_js["EntList"].Erase(entity);
-				DevMsg(4, "KleinWorks_DEBUG: Removed entity [%s] from metadata_js.\n", pEnt->m_ent_name);
-				break;
-			}
-
-		}
 
 
 		__unhook(&CzmqBaseEntity::OnParentEntityDestroyed, pEnt, &CzmqManager::HandleSelectedEntityDestroyed);
@@ -378,6 +331,67 @@ void CzmqManager::ClearEntitySelection()
 		m_pSelected_EntitiesList.erase(it);
 	}
 
+}
+
+
+
+
+rapidjson::Document	CzmqManager::GetEntityMetadata()
+{
+	rapidjson::Document entity_metadata_js;
+	entity_metadata_js.SetObject();
+
+	rapidjson::Value ent_metadata(rapidjson::kArrayType);
+	
+
+	for (auto& ent : m_pSelected_EntitiesList) {
+
+		// avoid taking a reference to the ID string by copying it
+		int	  id_strlen = strlen(CFmtStr("%d", ent->m_ent_id)) + 1;
+
+		char* ent_id = new char[id_strlen];
+		strcpy_s(ent_id, id_strlen, CFmtStr("%d", ent->m_ent_id).String());
+
+		ent_metadata.AddMember(rapidjson::StringRef(ent_id), ent->GetEntityMetaData(entity_metadata_js.GetAllocator()), entity_metadata_js.GetAllocator());
+	}
+
+
+
+
+
+	entity_metadata_js.AddMember("ent_metadata", ent_metadata, entity_metadata_js.GetAllocator());
+
+	return entity_metadata_js;
+}
+
+
+
+
+rapidjson::Document	CzmqManager::GetEntityMetadata(CzmqBaseEntity* pEntity)
+{
+	rapidjson::Document entity_metadata_js;
+	entity_metadata_js.SetObject();
+
+	rapidjson::Value ent_metadata(rapidjson::kArrayType);
+
+
+
+	// avoid taking a reference to the ID string by copying it
+	int	  id_strlen = strlen(CFmtStr("%d", pEntity->m_ent_id)) + 1;
+
+	char* ent_id = new char[id_strlen];
+	strcpy_s(ent_id, id_strlen, CFmtStr("%d", pEntity->m_ent_id).String());
+
+	ent_metadata.AddMember(rapidjson::StringRef(ent_id), pEntity->GetEntityMetaData(entity_metadata_js.GetAllocator()), entity_metadata_js.GetAllocator());
+
+
+
+
+
+
+	entity_metadata_js.AddMember("ent_metadata", ent_metadata, entity_metadata_js.GetAllocator());
+
+	return entity_metadata_js;
 }
 
 

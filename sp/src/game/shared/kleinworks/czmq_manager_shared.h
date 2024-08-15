@@ -11,6 +11,10 @@
 #include "cbase.h"
 
 #include "ZMQ/srcIPC_EntRec.h"
+#include "czmq_baseentity_shared.h"
+#include "czmq_pointcamera_shared.h"
+#include "czmq_baseskeletal_shared.h"
+
 #include "fmtstr.h"
 
 #include <algorithm>
@@ -21,26 +25,13 @@
 
 #define KW_OUTPUT_PORTNUM 5533
 
-
 #include "c_baseplayer.h"
 
-#include "kleinworks/c_zmq_baseentity.h"
-#include "kleinworks/c_zmq_pointcamera.h"
-#include "kleinworks/c_zmq_baseskeletal.h"
-
-
-#define CzmqBaseEntity   C_zmqBaseEntity
-#define CzmqPointCamera  C_zmqPointCamera
-#define CzmqBaseSkeletal C_zmqBaseSkeletal
 #else
 
 #define KW_OUTPUT_PORTNUM 5577
 
 #include "player.h"
-
-#include "kleinworks/czmq_baseentity.h"
-#include "kleinworks/czmq_pointcamera.h"
-#include "kleinworks/czmq_baseskeletal.h"
 
 #endif // CLIENT_DLL
 
@@ -65,11 +56,8 @@ public:
 	int	 record_frame_start;
 	int	 record_frame_end;
 
-
-	rapidjson::Document m_entity_metadata_js;
-
 	
-	srcIPC::EntRec m_zmq_comms = srcIPC::EntRec(5555, KW_INPUT_PORTNUM);
+	srcIPC::EntRec m_zmq_comms = srcIPC::EntRec(5555, KW_OUTPUT_PORTNUM);
 
 
 	
@@ -89,6 +77,11 @@ public:
 
 	void	HandleSelectedEntityDestroyed(CzmqBaseEntity* pCaller);
 
+private:
+
+	rapidjson::Document		GetEntityMetadata();
+
+	rapidjson::Document		GetEntityMetadata(CzmqBaseEntity* pEntity);
 
 };
 
