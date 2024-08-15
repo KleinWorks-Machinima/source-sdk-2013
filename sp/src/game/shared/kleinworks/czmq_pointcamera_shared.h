@@ -9,8 +9,18 @@
 #pragma once
 
 #include "cbase.h"
-#include "czmq_baseentity.h"
-#include "point_camera.h"
+#include "czmq_baseentity_shared.h"
+
+
+#ifdef CLIENT_DLL
+
+#include "c_point_camera.h"
+
+#else
+
+#include "../server/point_camera.h"
+
+#endif // CLIENT_DLL
 
 
 

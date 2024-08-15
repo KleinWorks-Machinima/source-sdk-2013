@@ -21,9 +21,22 @@
 
 #pragma warning(pop)
 
-#include "../c_baseentity.h"
-#include "../cliententitylist.h"
-//#include "../entityapi.h"
+#ifdef CLIENT_DLL
+
+#include "../client/c_baseentity.h"
+#include "../client/cliententitylist.h"
+
+#define IEntityListener IClientEntityListener
+
+#else
+
+#include "../server/baseentity.h"
+#include "../server/entityapi.h"
+
+
+
+#endif // CLIENT_DLL
+
 
 #include "fmtstr.h"
 
@@ -40,12 +53,12 @@ const enum class ENTREC_TYPES : int
 
 
 
-class C_zmqBaseEntity : public IClientEntityListener
+class CzmqBaseEntity : public IEntityListener
 {
 public:
-	C_zmqBaseEntity(CBaseHandle hEntity);
-	C_zmqBaseEntity();
-	~C_zmqBaseEntity();
+	CzmqBaseEntity(CBaseHandle hEntity);
+	CzmqBaseEntity();
+	~CzmqBaseEntity();
 
 	/*======Member-Variables======*/
 
@@ -53,6 +66,7 @@ public:
 	CBaseHandle	   mh_parent_entity;
 
 	int			   m_ent_type;
+	int			   m_ent_id;
 	const char*    m_ent_name;
 	const char*    m_ent_model;
 
@@ -60,7 +74,7 @@ public:
 	/*==========Events============*/
 
 
-	__event void OnParentEntityDestroyed(C_zmqBaseEntity* pCaller);
+	__event void OnParentEntityDestroyed(CzmqBaseEntity* pCaller);
 
 
 	/*======Member-Functions======*/
@@ -69,20 +83,26 @@ public:
 	virtual rapidjson::Value   GetEntityData(rapidjson::MemoryPoolAllocator<> &allocator);
 	virtual rapidjson::Value   GetEntityMetaData(rapidjson::MemoryPoolAllocator<> &allocator);
 
-	bool			operator ==(const C_zmqBaseEntity&  other) const;
-	bool			operator ==(const C_zmqBaseEntity*  other) const;
-	bool			operator ==(const C_zmqBaseEntity   other) const;
-	//bool operator ==(const std::unique_ptr<C_zmqBaseEntity> other) const;
+	bool			operator ==(const CzmqBaseEntity&  other) const;
+	bool			operator ==(const CzmqBaseEntity*  other) const;
+	bool			operator ==(const CzmqBaseEntity   other) const;
+	//bool operator ==(const std::unique_ptr<CzmqBaseEntity> other) const;
 	bool			operator ==(const CBaseHandle      other) const;
 
 
 private:
 
-	void OnEntityDeleted( C_BaseEntity *pEntity ) override
+	void OnEntityDeleted( CBaseEntity *pEntity ) override
 	{
-
+#ifdef CLIENT_DLL
 		if (pEntity->GetEntityIndex() != cl_entitylist->GetBaseEntityFromHandle(mh_parent_entity)->GetEntityIndex())
 			return;
+
+#else
+		if (pEntity->edict() != gEntList.GetEdict(mh_parent_entity))
+			return;
+
+#endif // CLIENT_DLL
 
 		OnParentEntityDestroyed(this);
 
@@ -91,3 +111,7 @@ private:
 
 
 };
+
+#ifdef CLIENT_DLL
+#else
+#endif // CLIENT_DLL

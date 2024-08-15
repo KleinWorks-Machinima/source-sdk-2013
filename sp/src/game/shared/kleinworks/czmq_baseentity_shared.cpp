@@ -7,7 +7,7 @@
 //===================| PROPERTY OF THE KLEINWORKS™ CORPORTATION®® |===================\\
 
 #include "cbase.h"
-#include "czmq_baseentity.h"
+#include "czmq_baseentity_shared.h"
 
 #include "mathlib/mathlib.h"
 
@@ -16,32 +16,42 @@
 
 CzmqBaseEntity::CzmqBaseEntity(CBaseHandle hEntity)
 {
-	CBaseEntity* pEntity = gEntList.GetBaseEntity(hEntity);
+#ifdef CLIENT_DLL
+	CBaseEntity* pEntity = cl_entitylist->GetBaseEntityFromHandle(hEntity);
+	const char* modelName = pEntity->GetModelName();
 
-	mh_parent_entity = hEntity;
-	m_ent_type		 = int(ENTREC_TYPES::BASE_ENTITY);
+	cl_entitylist->AddListenerEntity(this);
+#else
+	CBaseEntity* pEntity = gEntList.GetBaseEntity(hEntity);
+	const char* modelName = pEntity->GetModelName().ToCStr();
+
+	gEntList.AddListenerEntity(this);
+#endif // CLIENT_DLL
 
 	// we have to do this to avoid taking a reference to GetDebugName() or GetModelName()
 
 	int ent_name_len = strlen(pEntity->GetDebugName());
-	int ent_modelname_len = strlen(pEntity->GetModelName().ToCStr());
+	int ent_modelname_len = strlen(modelName);
 
 
-	char* ent_name_proxystr      = new char[ent_name_len + 1];
+	char* ent_name_proxystr = new char[ent_name_len + 1];
 	char* ent_modelname_proxystr = new char[ent_modelname_len + 1];
 
 
 	strcpy_s(ent_name_proxystr, ent_name_len + 1, pEntity->GetDebugName());
-	strcpy_s(ent_modelname_proxystr, ent_modelname_len + 1, pEntity->GetModelName().ToCStr());
+	strcpy_s(ent_modelname_proxystr, ent_modelname_len + 1, modelName);
 
-	
-	m_ent_name  = ent_name_proxystr;
-	m_ent_model = ent_modelname_proxystr;
+
+	m_ent_name		 = ent_name_proxystr;
+	m_ent_model		 = ent_modelname_proxystr;
+
+	mh_parent_entity = hEntity;
+	m_ent_type		 = int(ENTREC_TYPES::BASE_ENTITY);
+	m_ent_id		 = hEntity.GetSerialNumber();
 
 
 	DevMsg(3, "KleinWorks_DEBUG: Entity of class %s initialized.\n", pEntity->GetClassname());
 
-	gEntList.AddListenerEntity(this);
 }
 
 
@@ -58,7 +68,11 @@ CzmqBaseEntity::CzmqBaseEntity()
 
 CzmqBaseEntity::~CzmqBaseEntity()
 {
+#ifdef CLIENT_DLL
+	cl_entitylist->RemoveListenerEntity(this);
+#else
 	gEntList.RemoveListenerEntity(this);
+#endif // CLIENT_DLL
 	
 	if (mh_parent_entity != NULL) {
 		mh_parent_entity.Term();
@@ -72,13 +86,17 @@ CzmqBaseEntity::~CzmqBaseEntity()
 rapidjson::Value CzmqBaseEntity::GetEntityData(rapidjson::MemoryPoolAllocator<> &allocator)
 {
 
+#ifdef CLIENT_DLL
+	CBaseEntity* pEntity = cl_entitylist->GetBaseEntityFromHandle(mh_parent_entity);
+#else
 	CBaseEntity* pEntity = gEntList.GetBaseEntity(mh_parent_entity);
+#endif // CLIENT_DLL
 
 	rapidjson::Value entData_js = rapidjson::Value(rapidjson::kObjectType);
 
 	entData_js.AddMember("ent_name", rapidjson::StringRef(m_ent_name), allocator);
 
-	// have to do this little maneuver to avoid taking a reference of VecToString
+	
 
 	Quaternion entQuatAngle;
 	
@@ -88,7 +106,7 @@ rapidjson::Value CzmqBaseEntity::GetEntityData(rapidjson::MemoryPoolAllocator<> 
 	const char* quatAngleStr = static_cast<const char *>(CFmtStr("(%f, %f, %f, %f)", entQuatAngle.w, entQuatAngle.x, entQuatAngle.y, entQuatAngle.z));
 
 
-
+	// have to do this little maneuver to avoid taking a reference of VecToString
 	int absOriginStrlen  = strlen(VecToString(pEntity->GetAbsOrigin()));
 	int quatAnglesStrlen = strlen(quatAngleStr);
 

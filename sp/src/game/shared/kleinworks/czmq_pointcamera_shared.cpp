@@ -7,7 +7,7 @@
 //===================| PROPERTY OF THE KLEINWORKS™ CORPORTATION®® |===================\\
 
 #include "cbase.h"
-#include "czmq_pointcamera.h"
+#include "czmq_pointcamera_shared.h"
 
 
 
@@ -17,78 +17,57 @@
 
 CzmqPointCamera::CzmqPointCamera(CBaseHandle hEntity)
 {
-	CBaseEntity* pEnt = gEntList.GetBaseEntity(hEntity);
 
-	if (strcmp(pEnt->GetClassname(), "player") == 0) {
+#ifdef CLIENT_DLL
+	CBaseEntity* pEntityy = cl_entitylist->GetBaseEntityFromHandle(hEntity);
+	const char* modelName = pEntity->GetModelName();
 
-		CBasePlayer* pPlayerEntity = dynamic_cast<CBasePlayer*>(gEntList.GetBaseEntity(hEntity));
+	cl_entitylist->AddListenerEntity(this);
+#else
+	CBaseEntity* pEntity = gEntList.GetBaseEntity(hEntity);
+	const char* modelName = pEntity->GetModelName().ToCStr();
+
+	gEntList.AddListenerEntity(this);
+#endif // CLIENT_DLL
+
+	// we have to do this to avoid taking a reference to GetDebugName() or GetModelName()
+
+	int ent_name_len = strlen(pEntity->GetDebugName());
+	int ent_modelname_len = strlen(modelName);
+
+
+	char* ent_name_proxystr = new char[ent_name_len + 1];
+	char* ent_modelname_proxystr = new char[ent_modelname_len + 1];
+
+
+	strcpy_s(ent_name_proxystr, ent_name_len + 1, pEntity->GetDebugName());
+	strcpy_s(ent_modelname_proxystr, ent_modelname_len + 1, modelName);
+
+
+	m_ent_name		 = ent_name_proxystr;
+	m_ent_model		 = ent_modelname_proxystr;
+	m_ent_id		 = hEntity.GetSerialNumber();
+	mh_parent_entity = hEntity;
+	m_ent_type		 = int(ENTREC_TYPES::POINT_CAMERA);
+
+
+	if (strcmp(pEntity->GetClassname(), "player") == 0) {
+
+		CBasePlayer* pPlayerEntity = dynamic_cast<CBasePlayer*>(pEntity);
 
 		m_bIsPlayerCamera = true;
-		mh_parent_entity = hEntity;
 
-		m_ent_type  = int(ENTREC_TYPES::POINT_CAMERA);
-
-		// we have to do this to avoid taking a reference to GetDebugName() or GetModelName()
-
-		int ent_name_len = strlen(pPlayerEntity->GetDebugName());
-		int ent_modelname_len = strlen(pPlayerEntity->GetModelName().ToCStr());
-
-
-		char* ent_name_proxystr = new char[ent_name_len + 1];
-		char* ent_modelname_proxystr = new char[ent_modelname_len + 1];
-
-
-		strcpy_s(ent_name_proxystr, ent_name_len + 1, pPlayerEntity->GetDebugName());
-		strcpy_s(ent_modelname_proxystr, ent_modelname_len + 1, pPlayerEntity->GetModelName().ToCStr());
-
-
-		m_ent_name = ent_name_proxystr;
-		m_ent_model = ent_modelname_proxystr;
 
 		DevMsg(3, "KleinWorks: Camera of player named \"%s\" initialized.\n", pPlayerEntity->GetPlayerName());
-
-		gEntList.AddListenerEntity(this);
-
-		return;
 	}
-	if (pEnt->GetClassname() == std::string("CPointCamera").c_str()) {
+	else {
 
 		m_bIsPlayerCamera = false;
-		mh_parent_entity = hEntity;
-		m_ent_type  = int(ENTREC_TYPES::POINT_CAMERA);
 
 
-		// we have to do this to avoid taking a reference to GetDebugName() or GetModelName()
-
-		int ent_name_len = strlen(pEnt->GetDebugName());
-		int ent_modelname_len = strlen(pEnt->GetModelName().ToCStr());
-
-
-		char* ent_name_proxystr = new char[ent_name_len + 1];
-		char* ent_modelname_proxystr = new char[ent_modelname_len + 1];
-
-
-		strcpy_s(ent_name_proxystr, ent_name_len + 1, pEnt->GetDebugName());
-		strcpy_s(ent_modelname_proxystr, ent_modelname_len + 1, pEnt->GetModelName().ToCStr());
-
-
-		m_ent_name = ent_name_proxystr;
-		m_ent_model = ent_modelname_proxystr;
-
-
-
-		DevMsg(3, "KleinWorks: Point Camera named \"%s\" initialized.", pEnt->GetDebugName());
-
-		gEntList.AddListenerEntity(this);
-
-		return;
+		DevMsg(3, "KleinWorks: Point Camera named \"%s\" initialized.", pEntity->GetDebugName());
 	}
 
-	Warning("KleinWorks: ERROR! Something went wrong when trying to create a CzmqPointCamera object on entity named %s! Entity either wasn't a camera of any kind, or something else went wrong. Aborting!\n", pEnt->GetDebugName());
-
-	delete this;
-
-	return;
 }
 
 
@@ -107,7 +86,11 @@ rapidjson::Value CzmqPointCamera::GetEntityData(rapidjson::MemoryPoolAllocator<>
 
 
 	if (m_bIsPlayerCamera) {
+#ifdef CLIENT_DLL
+		CBasePlayer* pPlayerEntity = dynamic_cast<CBasePlayer*>(cl_entitylist->GetBaseEntityFromHandle(mh_parent_entity));
+#else
 		CBasePlayer* pPlayerEntity = dynamic_cast<CBasePlayer*>(gEntList.GetBaseEntity(mh_parent_entity));
+#endif // CLIENT_DLL
 
 		entData_js.AddMember("ent_name", rapidjson::StringRef(m_ent_name), allocator);
 
@@ -134,7 +117,11 @@ rapidjson::Value CzmqPointCamera::GetEntityData(rapidjson::MemoryPoolAllocator<>
 
 	}
 	else {
+#ifdef CLIENT_DLL
+		CPointCamera* pPointCameraEntity = dynamic_cast<CPointCamera*>(cl_entitylist->GetBaseEntityFromHandle(mh_parent_entity));
+#else
 		CPointCamera* pPointCameraEntity = dynamic_cast<CPointCamera*>(gEntList.GetBaseEntity(mh_parent_entity));
+#endif // CLIENT_DLL
 		
 		entData_js.AddMember("ent_name", rapidjson::StringRef(m_ent_name), allocator);
 

@@ -7,7 +7,7 @@
 //===================| PROPERTY OF THE KLEINWORKS™ CORPORTATION®® |===================\\
 
 #include "cbase.h"
-#include "c_zmq_baseskeletal.h"
+#include "czmq_baseskeletal_shared.h"
 
 
 
@@ -22,13 +22,40 @@
 
 
 
-C_zmqBaseSkeletal::C_zmqBaseSkeletal(CBaseHandle hEntity)
+CzmqBaseSkeletal::CzmqBaseSkeletal(CBaseHandle hEntity)
 {
+#ifdef CLIENT_DLL
 	CBaseAnimating* pSkelEntity = cl_entitylist->GetBaseEntityFromHandle(hEntity)->GetBaseAnimating();
+	const char* modelName = pSkelEntity->GetModelName();
+	cl_entitylist->AddListenerEntity(this);
+
+#else
+	CBaseAnimating* pSkelEntity = gEntList.GetBaseEntity(hEntity)->GetBaseAnimating();
+	const char* modelName = pSkelEntity->GetModelName().ToCStr();
+	gEntList.AddListenerEntity(this);
 
 
+#endif // CLIENT_DLL
+
+	// we have to do this to avoid taking a reference to GetDebugName() or GetModelName()
+
+	int ent_name_len = strlen(pSkelEntity->GetDebugName());
+	int ent_modelname_len = strlen(modelName);
+
+
+	char* ent_name_proxystr = new char[ent_name_len + 1];
+	char* ent_modelname_proxystr = new char[ent_modelname_len + 1];
+
+
+	strcpy_s(ent_name_proxystr, ent_name_len + 1, pSkelEntity->GetDebugName());
+	strcpy_s(ent_modelname_proxystr, ent_modelname_len + 1, modelName);
+
+
+	m_ent_name		 = ent_name_proxystr;
+	m_ent_model		 = ent_modelname_proxystr;
 	mh_parent_entity = hEntity;
-	m_ent_type  = int(ENTREC_TYPES::BASE_SKELETAL);
+	m_ent_type		 = int(ENTREC_TYPES::BASE_SKELETAL);
+	m_ent_id		 = hEntity.GetSerialNumber();
 
 	CStudioHdr* pEntModel = pSkelEntity->GetModelPtr();
 
@@ -47,47 +74,32 @@ C_zmqBaseSkeletal::C_zmqBaseSkeletal(CBaseHandle hEntity)
 		
 		mch_bonenames_list.emplace_back(boneName);
 	}
-	
-
-	// we have to do this to avoid taking a reference to GetDebugName() or GetModelName()
-
-	int ent_name_len = strlen(pSkelEntity->GetDebugName());
-	int ent_modelname_len = strlen(pSkelEntity->GetModelName());
-
-
-	char* ent_name_proxystr = new char[ent_name_len + 1];
-	char* ent_modelname_proxystr = new char[ent_modelname_len + 1];
-
-
-	strcpy_s(ent_name_proxystr, ent_name_len + 1, pSkelEntity->GetDebugName());
-	strcpy_s(ent_modelname_proxystr, ent_modelname_len + 1, pSkelEntity->GetModelName());
-
-
-	m_ent_name  = ent_name_proxystr;
-	m_ent_model = ent_modelname_proxystr;
 
 	
 
 
 	DevMsg(3, "KleinWorks: Entity of class %s initialized.\n", pSkelEntity->GetClassname());
 
-	cl_entitylist->AddListenerEntity(this);
 }
 
 
-C_zmqBaseSkeletal::~C_zmqBaseSkeletal()
+CzmqBaseSkeletal::~CzmqBaseSkeletal()
 {
-	C_zmqBaseEntity::~C_zmqBaseEntity();
+	CzmqBaseEntity::~CzmqBaseEntity();
 }
 
 
 
 
 
-rapidjson::Value C_zmqBaseSkeletal::GetEntityData(rapidjson::MemoryPoolAllocator<> &allocator)
+rapidjson::Value CzmqBaseSkeletal::GetEntityData(rapidjson::MemoryPoolAllocator<> &allocator)
 {
 
+#ifdef CLIENT_DLL
 	CBaseAnimating* pSkelEntity = cl_entitylist->GetBaseEntityFromHandle(mh_parent_entity)->GetBaseAnimating();
+#else
+	CBaseAnimating* pSkelEntity = gEntList.GetBaseEntity(mh_parent_entity)->GetBaseAnimating();
+#endif // CLIENT_DLL
 
 	CStudioHdr*     pModelPtr   = pSkelEntity->GetModelPtr();
 
@@ -229,7 +241,7 @@ rapidjson::Value C_zmqBaseSkeletal::GetEntityData(rapidjson::MemoryPoolAllocator
 
 
 
-rapidjson::Value C_zmqBaseSkeletal::GetEntityMetaData(rapidjson::MemoryPoolAllocator<> &allocator)
+rapidjson::Value CzmqBaseSkeletal::GetEntityMetaData(rapidjson::MemoryPoolAllocator<> &allocator)
 {
 	rapidjson::Value entMetaData_js = rapidjson::Value(rapidjson::kObjectType);
 
