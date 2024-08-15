@@ -23,7 +23,7 @@
 #include "czmq_prelude.h"
 
 //  External dependencies
-#include <libzmq/zmq.h>
+#include <zmq/libzmq/zmq.h>
 
 //  CZMQ version macros for compile-time API detection
 #define CZMQ_VERSION_MAJOR 4

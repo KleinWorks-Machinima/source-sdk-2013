@@ -27,6 +27,7 @@
 #include "../client/cliententitylist.h"
 
 #define IEntityListener IClientEntityListener
+#define CPointCamera    C_PointCamera
 
 #else
 

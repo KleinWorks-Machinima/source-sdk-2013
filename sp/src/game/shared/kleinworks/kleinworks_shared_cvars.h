@@ -144,7 +144,7 @@ CON_COMMAND(kw_entrec_select, "Select an entity for recording by name. If no arg
 #ifdef CLIENT_DLL
 	CBasePlayer* pPlayer = ToBasePlayer(cl_entitylist->GetBaseEntity(engine->GetLocalPlayer()));
 #else
-	CBasePlayer* pPlayer = gEntList.GetBaseEntity(hEntity);
+	CBasePlayer* pPlayer = UTIL_GetLocalPlayer();
 #endif // CLIENT_DLL
 
 	CBaseEntity* pEntityToSelect = nullptr;
@@ -208,7 +208,7 @@ CON_COMMAND(kw_entrec_deselect, "Removes an entity from EntRec selection by ID."
 #ifdef CLIENT_DLL
 	CBasePlayer* pPlayer = ToBasePlayer(cl_entitylist->GetBaseEntity(engine->GetLocalPlayer()));
 #else
-	CBasePlayer* pPlayer = gEntList.GetBaseEntity(hEntity);
+	CBasePlayer* pPlayer = UTIL_GetLocalPlayer();
 #endif // CLIENT_DLL
 
 	CBaseEntity* pEntityToDeselect = nullptr;
@@ -282,7 +282,7 @@ CON_COMMAND(kw_dbg_skel, "Debug command")
 #ifdef CLIENT_DLL
 	CBasePlayer* pPlayer = ToBasePlayer(cl_entitylist->GetBaseEntity(engine->GetLocalPlayer()));
 #else
-	CBasePlayer* pPlayer = gEntList.GetBaseEntity(hEntity);
+	CBasePlayer* pPlayer = UTIL_GetLocalPlayer();
 #endif // CLIENT_DLL
 
 

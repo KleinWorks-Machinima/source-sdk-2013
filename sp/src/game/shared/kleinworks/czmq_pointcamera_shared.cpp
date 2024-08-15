@@ -19,7 +19,7 @@ CzmqPointCamera::CzmqPointCamera(CBaseHandle hEntity)
 {
 
 #ifdef CLIENT_DLL
-	CBaseEntity* pEntityy = cl_entitylist->GetBaseEntityFromHandle(hEntity);
+	CBaseEntity* pEntity  = cl_entitylist->GetBaseEntityFromHandle(hEntity);
 	const char* modelName = pEntity->GetModelName();
 
 	cl_entitylist->AddListenerEntity(this);
@@ -29,7 +29,7 @@ CzmqPointCamera::CzmqPointCamera(CBaseHandle hEntity)
 
 	gEntList.AddListenerEntity(this);
 #endif // CLIENT_DLL
-
+	
 	// we have to do this to avoid taking a reference to GetDebugName() or GetModelName()
 
 	int ent_name_len = strlen(pEntity->GetDebugName());

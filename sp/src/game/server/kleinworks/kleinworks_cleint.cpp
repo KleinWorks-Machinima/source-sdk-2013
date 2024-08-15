@@ -28,8 +28,8 @@ HL2 client/server game specific stuff
 /*| KLEINWORKS™ ADDITION |*/
 
 
-#include "kleinworks_cvars.h"
-#include "czmq_manager.h"
+#include "kleinworks/kleinworks_shared_cvars.h"
+#include "kleinworks/czmq_manager_shared.h"
 
 
 /*| KLEINWORKS™ ADDITION |*/

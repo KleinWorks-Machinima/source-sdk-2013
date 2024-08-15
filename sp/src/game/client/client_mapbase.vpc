@@ -14,6 +14,12 @@ $Configuration
 		$PreprocessorDefinitions		"$BASE;MAPBASE_VSCRIPT"		[$MAPBASE_VSCRIPT]
 		$PreprocessorDefinitions		"$BASE;NEW_RESPONSE_SYSTEM"		[$NEW_RESPONSE_SYSTEM]
 	}
+
+	$Linker
+	{
+		$AdditionalDependencies		"$BASE;libzmq-v120-mt-s-4_3_6.lib;libzmq-v120-mt-4_3_6.lib;czmq.lib"
+	}
+
 }
 
 $Project

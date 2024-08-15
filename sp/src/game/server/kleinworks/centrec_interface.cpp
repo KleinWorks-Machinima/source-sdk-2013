@@ -9,7 +9,7 @@
 //===================| PROPERTY OF THE KLEINWORKS™ CORPORTATION®® |===================\\
 
 #include "cbase.h"
-#include "czmq_manager.h"
+#include "kleinworks/czmq_manager_shared.h"
 #include <networkvar.h>
 
 
