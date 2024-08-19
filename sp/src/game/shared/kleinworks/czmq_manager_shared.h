@@ -24,16 +24,46 @@
 #ifdef CLIENT_DLL
 
 #define KW_OUTPUT_PORTNUM 5533
+#define KW_INPUT_PORTNUM  5551
 
 #include "c_baseplayer.h"
 
 #else
 
 #define KW_OUTPUT_PORTNUM 5577
+#define KW_INPUT_PORTNUM  5550
 
 #include "player.h"
 
 #endif // CLIENT_DLL
+
+
+
+
+
+struct EntEvent_t
+{
+	int				event_type;
+	int				ent_id;
+	CzmqBaseEntity* p_entity = nullptr;
+
+
+
+	rapidjson::Value ParseEvent(rapidjson::MemoryPoolAllocator<> &allocator)
+	{
+		rapidjson::Value ent_event_js;
+
+
+		ent_event_js.AddMember("event_type", event_type, allocator);
+		ent_event_js.AddMember("ent_id", ent_id, allocator);
+		if (p_entity != nullptr)
+			ent_event_js.AddMember("ent_metadata", p_entity->GetEntityMetaData(allocator), allocator);
+
+		return ent_event_js;
+	}
+
+};
+
 
 
 
@@ -49,6 +79,8 @@ public:
 	/*======Member-Variables======*/
 public:
 	std::vector<std::unique_ptr<CzmqBaseEntity>> m_pSelected_EntitiesList;
+
+	std::list<EntEvent_t>						 m_ent_events;
 	
 	
 	int	 m_RecordUntil;
@@ -57,7 +89,7 @@ public:
 	int	 record_frame_end;
 
 	
-	srcIPC::EntRec m_zmq_comms = srcIPC::EntRec(5555, KW_OUTPUT_PORTNUM);
+	srcIPC::EntRec m_zmq_comms = srcIPC::EntRec(KW_INPUT_PORTNUM, KW_OUTPUT_PORTNUM);
 
 
 	
@@ -81,9 +113,4 @@ private:
 
 	rapidjson::Document		GetEntityMetadata();
 
-	rapidjson::Document		GetEntityMetadata(CzmqBaseEntity* pEntity);
-
 };
-
-
-

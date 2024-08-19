@@ -231,7 +231,7 @@ int InSourceOutSource::DisconnectSockets()
 
 	
 	
-	rc = zsock_unbind(m_sockt_INPUT, zsock_last_endpoint(m_sockt_INPUT));
+	rc = zsock_disconnect(m_sockt_INPUT, zsock_last_endpoint(m_sockt_INPUT));
 	assert(rc != -1);
 
 
@@ -378,8 +378,7 @@ int InSourceOutSource::InputReady(bool isInFuncLoop)
 			//printf("InputReady: Received output ready message!\n");
 			m_peer_routingID = zframe_data(first_frame);
 
-			zframe_destroy(&first_frame);
-			zmsg_destroy(&std::get<1>(messageTuple));
+			
 
 
 			zmsg_t* inputReadyMessage = srcIPCMessage::InputReady_t::New(zframe_new(m_peer_routingID, 5));
@@ -391,7 +390,8 @@ int InSourceOutSource::InputReady(bool isInFuncLoop)
 
 			zmsg_send(&inputReadyMessage, m_sockt_INPUT);
 
-
+			zframe_destroy(&first_frame);
+			zmsg_destroy(&std::get<1>(messageTuple));
 
 
 			m_isReceivingInput = true;
@@ -424,7 +424,7 @@ int InSourceOutSource::InputReady(bool isInFuncLoop)
 		}
 		}
 
-		messageTuple = PollSocketForMessages(m_sockt_OUTPUT);
+		messageTuple = PollSocketForMessages(m_sockt_INPUT);
 	}
 
 	//printf("InputReady: Received no messages.\n");
@@ -820,8 +820,6 @@ std::tuple<src_IPC_MESSAGE, zmsg_t*> InSourceOutSource::PollSocketForMessages(zs
 		assert(first_frame);
 
 
-		zmsg_destroy(&duplicateMessage);
-
 
 
 
@@ -837,14 +835,20 @@ std::tuple<src_IPC_MESSAGE, zmsg_t*> InSourceOutSource::PollSocketForMessages(zs
 
 			// first frame can only contain INPUT messages
 		case src_IPC_MESSAGE::INPUT_DISCONNECT: {
+			zmsg_destroy(&duplicateMessage);
+
 			return std::tuple<src_IPC_MESSAGE, zmsg_t*>(src_IPC_MESSAGE::INPUT_DISCONNECT, receivedMessage);
 		}
 
 		case src_IPC_MESSAGE::INPUT_READY: {
+			zmsg_destroy(&duplicateMessage);
+
 			return std::tuple<src_IPC_MESSAGE, zmsg_t*>(src_IPC_MESSAGE::INPUT_READY, receivedMessage);
 		}
 
 		case src_IPC_MESSAGE::RECEIVED_DATA: {
+			zmsg_destroy(&duplicateMessage);
+
 			return std::tuple<src_IPC_MESSAGE, zmsg_t*>(src_IPC_MESSAGE::RECEIVED_DATA, receivedMessage);
 		}
 
@@ -866,6 +870,7 @@ std::tuple<src_IPC_MESSAGE, zmsg_t*> InSourceOutSource::PollSocketForMessages(zs
 		zframe_destroy(&second_frame);
 
 
+		zmsg_destroy(&duplicateMessage);
 
 
 		switch (second_frame_MessageType) {
