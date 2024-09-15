@@ -34,8 +34,6 @@
 #include "../server/baseentity.h"
 #include "../server/entityapi.h"
 
-
-
 #endif // CLIENT_DLL
 
 
@@ -69,6 +67,7 @@ public:
 	int			   m_ent_type;
 	int			   m_ent_id;
 	int			   m_ent_parent_id;
+	int			   m_ent_numbones;
 	const char*    m_ent_name;
 	const char*    m_ent_model;
 
@@ -84,6 +83,8 @@ public:
 
 	virtual rapidjson::Value   GetEntityData(rapidjson::MemoryPoolAllocator<> &allocator);
 	virtual rapidjson::Value   GetEntityMetaData(rapidjson::MemoryPoolAllocator<> &allocator);
+
+	bool			IsValid();
 
 	bool			operator ==(const CzmqBaseEntity&  other) const;
 	bool			operator ==(const CzmqBaseEntity*  other) const;

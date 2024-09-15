@@ -14,10 +14,13 @@
 #include "czmq_baseentity_shared.h"
 #include "czmq_pointcamera_shared.h"
 #include "czmq_baseskeletal_shared.h"
+#include "czmq_events_shared.h"
 
+#include "usermessages.h"
 #include "fmtstr.h"
 
 #include <algorithm>
+#include <string>
 
 
 // this is shared so thats why kleinworks/ is specified
@@ -26,43 +29,21 @@
 #define KW_OUTPUT_PORTNUM 5533
 #define KW_INPUT_PORTNUM  5551
 
+#define kleinworks_msg_header "kleinworks_cl"
+
 #include "c_baseplayer.h"
+#include "hud_macros.h"
 
 #else
 
 #define KW_OUTPUT_PORTNUM 5577
 #define KW_INPUT_PORTNUM  5550
 
+#define kleinworks_msg_header "kleinworks_sv"
+
 #include "player.h"
 
 #endif // CLIENT_DLL
-
-
-
-
-
-struct EntEvent_t
-{
-	int				event_type;
-	int				ent_id;
-	CzmqBaseEntity* p_entity = nullptr;
-
-
-
-	rapidjson::Value ParseEvent(rapidjson::MemoryPoolAllocator<> &allocator)
-	{
-		rapidjson::Value ent_event_js;
-
-
-		ent_event_js.AddMember("event_type", event_type, allocator);
-		ent_event_js.AddMember("ent_id", ent_id, allocator);
-		if (p_entity != nullptr)
-			ent_event_js.AddMember("ent_metadata", p_entity->GetEntityMetaData(allocator), allocator);
-
-		return ent_event_js;
-	}
-
-};
 
 
 
@@ -83,34 +64,40 @@ public:
 	std::list<EntEvent_t>						 m_ent_events;
 	
 	
-	int	 m_RecordUntil;
-	bool record_toggle;
-	int	 record_frame_start;
-	int	 record_frame_end;
+	int	 m_record_until;
+	int	 m_start_record_tick;
+	int	 m_end_record_tick;
+	int  m_last_tick;
 
-	
 	srcIPC::EntRec m_zmq_comms = srcIPC::EntRec(KW_INPUT_PORTNUM, KW_OUTPUT_PORTNUM);
 
+	bool m_record_toggle;
 
 	
 	/*======Member-Functions======*/
 public:
-	void    OnTick();
+	void	OnTick();
 
 	void	UpdateSelectedEntities();
 
 	void	RemoveEntityFromSelection(CzmqBaseEntity* pEntity);
+	void	RemoveEntityFromSelection(int serialNumber);
 	void	AddEntityToSelection(CBaseHandle hEntity);
 
 
 	void	ClearEntitySelection();
 
-	void    SetRecording(bool value);
+	void	SetRecording(bool value);
 
 	void	HandleSelectedEntityDestroyed(CzmqBaseEntity* pCaller);
 
+	int		AttemptEstablishRecording();
+
+
 private:
 
-	rapidjson::Document		GetEntityMetadata();
+	rapidjson::Document	 GetEntityMetadata();
+
+	CzmqBaseEntity*		 CreateCzmqEntity(CBaseHandle hEntity);
 
 };

@@ -19,29 +19,27 @@ CzmqPointCamera::CzmqPointCamera(CBaseHandle hEntity)
 {
 
 #ifdef CLIENT_DLL
-	CBaseEntity* pEntity  = cl_entitylist->GetBaseEntityFromHandle(hEntity);
-	const char* modelName = pEntity->GetModelName();
+	CBaseEntity* pEntity = cl_entitylist->GetBaseEntityFromHandle(hEntity);
 
 	cl_entitylist->AddListenerEntity(this);
 #else
 	CBaseEntity* pEntity = gEntList.GetBaseEntity(hEntity);
-	const char* modelName = pEntity->GetModelName().ToCStr();
 
 	gEntList.AddListenerEntity(this);
 #endif // CLIENT_DLL
-	
+
 	// we have to do this to avoid taking a reference to GetDebugName() or GetModelName()
 
-	int ent_name_len = strlen(pEntity->GetDebugName());
-	int ent_modelname_len = strlen(modelName);
+	const char* modelname = modelinfo->GetModelName(pEntity->GetModel());
 
+	int ent_name_len = strlen(pEntity->GetDebugName());
+	int ent_modelname_len = strlen(modelname);
 
 	char* ent_name_proxystr = new char[ent_name_len + 1];
 	char* ent_modelname_proxystr = new char[ent_modelname_len + 1];
 
-
 	strcpy_s(ent_name_proxystr, ent_name_len + 1, pEntity->GetDebugName());
-	strcpy_s(ent_modelname_proxystr, ent_modelname_len + 1, modelName);
+	strcpy_s(ent_modelname_proxystr, ent_modelname_len + 1, modelname);
 
 
 	m_ent_name		 = ent_name_proxystr;
@@ -109,24 +107,26 @@ rapidjson::Value CzmqPointCamera::GetEntityData(rapidjson::MemoryPoolAllocator<>
 	entData_js.AddMember("ent_id", rapidjson::StringRef(ent_id), allocator);
 
 
-	
-	// have to do this little maneuver to avoid taking a reference of VecToString
+	rapidjson::Value ent_pos_js = rapidjson::Value(rapidjson::kObjectType);
+	rapidjson::Value ent_rot_js = rapidjson::Value(rapidjson::kObjectType);
 
-	int eyePositionStrlen = strlen(VecToString(pPointCameraEntity->EyePosition()));
-	int quatAnglesStrlen  = strlen(VecToString(pPointCameraEntity->EyeAngles()));
-
-
-	char* eyePosition_proxystr   = new char[eyePositionStrlen + 1];
-	char* eyeQuatAngles_proxystr = new char[quatAnglesStrlen + 1];
+	rapidjson::Value ent_origin_js = rapidjson::Value(rapidjson::kObjectType);
+	rapidjson::Value ent_angles_js = rapidjson::Value(rapidjson::kObjectType);
 
 
-	strcpy_s(eyePosition_proxystr, eyePositionStrlen + 1, VecToString(pPointCameraEntity->EyePosition()));
-	strcpy_s(eyeQuatAngles_proxystr, quatAnglesStrlen + 1, VecToString(pPointCameraEntity->EyeAngles()));
+	ent_origin_js.AddMember("x", pPointCameraEntity->EyePosition().x, allocator);
+	ent_origin_js.AddMember("y", pPointCameraEntity->EyePosition().y, allocator);
+	ent_origin_js.AddMember("z", pPointCameraEntity->EyePosition().z, allocator);
 
+	ent_angles_js.AddMember("x", pPointCameraEntity->EyeAngles().x, allocator);
+	ent_angles_js.AddMember("y", pPointCameraEntity->EyeAngles().y, allocator);
+	ent_angles_js.AddMember("z", pPointCameraEntity->EyeAngles().z, allocator);
 
+	ent_pos_js.AddMember("0", ent_origin_js, allocator);
+	ent_rot_js.AddMember("0", ent_angles_js, allocator);
 
-	entData_js.AddMember("VEC_ORIGIN", rapidjson::StringRef(eyePosition_proxystr), allocator);
-	entData_js.AddMember("QANGLE_ANGLES", rapidjson::StringRef(eyeQuatAngles_proxystr), allocator);
+	entData_js.AddMember("ent_pos", ent_pos_js, allocator);
+	entData_js.AddMember("ent_rot", ent_rot_js, allocator);
 
 
 	return entData_js;

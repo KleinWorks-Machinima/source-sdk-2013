@@ -29,7 +29,7 @@ HL2 client/server game specific stuff
 
 
 #include "kleinworks/czmq_manager_shared.h"
-#include "kleinworks/kleinworks_shared_cvars.h"
+#include "kleinworks_cvars.h"
 
 
 /*| KLEINWORKS™ ADDITION |*/
@@ -191,15 +191,8 @@ void GameStartFrame(void)
 	/*========================*/
 	/*| KLEINWORKS™ ADDITION |*/
 
-
 	// if we are in the middle of stopping a recording, run anyway
 	if (g_CzmqManager.m_zmq_comms.m_isDoneTransfering || g_CzmqManager.m_zmq_comms.m_peerIsDoneTransfering) {
-
-		g_CzmqManager.OnTick();
-		return;
-	}
-	// if we are in the middle of starting a recording, run anyway
-	if (g_CzmqManager.m_zmq_comms.m_OUTPUT_tick_count <= 1) {
 
 		g_CzmqManager.OnTick();
 		return;
@@ -208,8 +201,21 @@ void GameStartFrame(void)
 	if (engine->IsPaused())
 		return;
 
-	g_CzmqManager.OnTick();
-	
+
+	if (g_CzmqManager.m_start_record_tick != 0 && gpGlobals->tickcount < g_CzmqManager.m_start_record_tick)
+		return;
+
+
+	if (gpGlobals->tickcount == g_CzmqManager.m_start_record_tick)
+		Msg("kleinworks_sv_DEBUG: Start record tick [%d].\n", gpGlobals->tickcount);
+
+
+
+	if (g_CzmqManager.m_last_tick < gpGlobals->tickcount) {
+		g_CzmqManager.m_last_tick = gpGlobals->tickcount;
+		g_CzmqManager.OnTick();
+	}
+
 	/*| KLEINWORKS™ ADDITION |*/
 	/*========================*/
 

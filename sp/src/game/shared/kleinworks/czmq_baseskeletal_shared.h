@@ -34,8 +34,6 @@ public:
 	bool	  mb_is_npc;
 	bool	  mb_is_ragdoll;
 
-	int		  m_numbones;
-
 	std::vector<const char*> mch_bonenames_list;
 
 

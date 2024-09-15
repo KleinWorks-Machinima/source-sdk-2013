@@ -122,14 +122,15 @@ $Project
 			$File	"$SRCDIR\game\shared\kleinworks\czmq_pointcamera_shared.h"
 			$File	"$SRCDIR\game\shared\kleinworks\czmq_baseskeletal_shared.h"
 			$File	"$SRCDIR\game\shared\kleinworks\czmq_manager_shared.h"
-			$File	"$SRCDIR\game\shared\kleinworks\czmq_entityfactory.h"
-			$File	"$SRCDIR\game\shared\kleinworks\kleinworks_shared_cvars.h"
+			$File	"$SRCDIR\game\shared\kleinworks\czmq_events_shared.h"
+			$File	"$SRCDIR\game\shared\kleinworks\kleinworks_usermessages.h"
 
 			$File	"$SRCDIR\game\shared\kleinworks\czmq_baseentity_shared.cpp"
 			$File	"$SRCDIR\game\shared\kleinworks\czmq_pointcamera_shared.cpp"
 			$File	"$SRCDIR\game\shared\kleinworks\czmq_baseskeletal_shared.cpp"
 			$File	"$SRCDIR\game\shared\kleinworks\czmq_manager_shared.cpp"
-			$File	"$SRCDIR\game\shared\kleinworks\czmq_entityfactory.cpp"
+			$File	"$SRCDIR\game\shared\kleinworks\czmq_events_shared.cpp"
+			$File	"$SRCDIR\game\shared\kleinworks\kleinworks_usermessages.cpp"
 		}
 	}
 

@@ -17,21 +17,25 @@
 class CEntRec_Interface : public CBaseEntity
 {
 public:
-	DECLARE_CLASS(CEntRec_Interface, CLogicalEntity);
+	DECLARE_CLASS(CEntRec_Interface, CBaseEntity);
 	DECLARE_SERVERCLASS();
+
+
 	DECLARE_DATADESC();
 
 	CEntRec_Interface();
 	
 	/*======Member-Variables======*/
 	
-	CNetworkVar(const char*, m_CurrentDataBuffer);
-	CNetworkVar(const char*, m_CurrentMetaDataBuffer);
-	CNetworkVar(int, m_OUTPUTtickCount);
-	CNetworkVar(int, m_INPUTtickCount);
 	//CNetworkVar(int, m_RecordRate);
-	CNetworkVar(bool, m_isSendingOutput);
+	CNetworkVar(bool, m_isRecording);
 	CNetworkVar(bool, m_isReceivingInput);
+
+	
+	CNetworkVar(int, m_start_record_tick);
+	CNetworkVar(int, m_end_record_tick);
+
+	int			m_last_tick;
 
 
 	/*======Member-Functions======*/
@@ -44,14 +48,15 @@ public:
 
 
 	void StartRecording(inputdata_t &inputData);
-
 	void StopRecording(inputdata_t &inputData);
-
 
 	void AddEntToRecording(inputdata_t &inputData);
 
+	void Think() override;
 
 	void UpdateNetworkedVars();
+
+	void CzmqOnTick();
 
 };
 
@@ -68,12 +73,9 @@ LINK_ENTITY_TO_CLASS(entrec_interface, CEntRec_Interface);
 //==========\\
 
 BEGIN_DATADESC(CEntRec_Interface)
-
 	DEFINE_INPUTFUNC(FIELD_VOID, "StartRecording", StartRecording),
 	DEFINE_INPUTFUNC(FIELD_VOID, "StopRecording", StopRecording),
 	DEFINE_INPUTFUNC(FIELD_EHANDLE, "AddEntToRecording", AddEntToRecording),
-	DEFINE_THINKFUNC(UpdateNetworkedVars),
-
 END_DATADESC();
 
 
@@ -82,15 +84,10 @@ END_DATADESC();
 //============\\
 
 IMPLEMENT_SERVERCLASS_ST(CEntRec_Interface, DT_EntRec_Interface)
-
-	SendPropString(SENDINFO(m_CurrentDataBuffer)),
-	SendPropString(SENDINFO(m_CurrentMetaDataBuffer)),
-	SendPropInt(SENDINFO(m_OUTPUTtickCount)),
-	SendPropInt(SENDINFO(m_INPUTtickCount)),
-	//SendPropInt(SENDINFO(m_RecordRate)),
-	SendPropBool(SENDINFO(m_isSendingOutput)),
+	SendPropBool(SENDINFO(m_isRecording)),
 	SendPropBool(SENDINFO(m_isReceivingInput)),
-
+	SendPropInt(SENDINFO(m_start_record_tick)),
+	SendPropInt(SENDINFO(m_end_record_tick)),
 END_SEND_TABLE()
 
 
@@ -99,8 +96,9 @@ END_SEND_TABLE()
 
 CEntRec_Interface::CEntRec_Interface()
 {
+	m_isRecording = false;
+
 	SetTransmitState(FL_EDICT_ALWAYS);
-	SetThink (&CEntRec_Interface::UpdateNetworkedVars );
 	SetNextThink(gpGlobals->curtime);
 }
 
@@ -110,8 +108,11 @@ CEntRec_Interface::CEntRec_Interface()
 void CEntRec_Interface::StartRecording(inputdata_t &inputData)
 {
 	ConVar* kleinworksRecordCvar = cvar->FindVar("KW_entrec_record");
-	if (kleinworksRecordCvar->GetBool() != true)
+	if (kleinworksRecordCvar->GetBool() != true) {
 		kleinworksRecordCvar->SetValue(true);
+
+		UpdateNetworkedVars();
+	}
 
 }
 
@@ -120,8 +121,12 @@ void CEntRec_Interface::StartRecording(inputdata_t &inputData)
 void CEntRec_Interface::StopRecording(inputdata_t &inputData)
 {
 	ConVar* kleinworksRecordCvar = cvar->FindVar("KW_entrec_record");
-	if (kleinworksRecordCvar->GetBool() != false)
+	if (kleinworksRecordCvar->GetBool() != false) {
 		kleinworksRecordCvar->SetValue(false);
+
+		UpdateNetworkedVars();
+	}
+
 }
 
 
@@ -131,7 +136,7 @@ void CEntRec_Interface::AddEntToRecording(inputdata_t &inputData)
 {
 	inputData.value.Convert(FIELD_EHANDLE, this->GetBaseEntity(), inputData.pActivator, inputData.pCaller);
 
-	DevMsg(3, "KleinWorks: Added entity with targetname %s to EntRec selection!\n", inputData.value.Entity().Get()->GetDebugName());
+	DevMsg(3, "kleinworks_sv: Added entity with targetname %s to EntRec selection!\n", inputData.value.Entity().Get()->GetDebugName());
 
 	g_CzmqManager.AddEntityToSelection(inputData.value.Entity());
 }
@@ -139,42 +144,101 @@ void CEntRec_Interface::AddEntToRecording(inputdata_t &inputData)
 
 
 
-void CEntRec_Interface::UpdateNetworkedVars()
+void CEntRec_Interface::Think()
 {
-	//  if the entrec control panel isn't visible, theres no reason to update it
-	if (cvar->FindVar("entrec_showcontrolpanel")->GetBool() != true) {
-		SetNextThink(gpGlobals->curtime);
+	BaseClass::Think();
+
+	UpdateNetworkedVars();
+
+
+
+	if (m_end_record_tick != 0 && gpGlobals->tickcount == m_end_record_tick) {
+		Msg("kleinworks_sv_DEBUG: End record tick [%d].\n", gpGlobals->tickcount);
+
+		g_CzmqManager.SetRecording(false);
+	}
+	
+
+	//CzmqOnTick();
+
+
+	SetNextThink(gpGlobals->curtime);
+}
+
+
+
+
+void CEntRec_Interface::CzmqOnTick()
+{
+
+	// if we are in the middle of stopping a recording, run anyway
+	if (g_CzmqManager.m_zmq_comms.m_isDoneTransfering || g_CzmqManager.m_zmq_comms.m_peerIsDoneTransfering) {
+
+		g_CzmqManager.OnTick();
 		return;
 	}
+
+	if (engine->IsPaused()) 
+		return;
+	
+
+	if (m_start_record_tick != 0 && gpGlobals->tickcount < m_start_record_tick)
+		return;
+	
+
+	if (gpGlobals->tickcount == m_start_record_tick)
+		Msg("kleinworks_sv_DEBUG: Start record tick [%d].\n", gpGlobals->tickcount);
 	
 
 
-	m_OUTPUTtickCount  = g_CzmqManager.m_zmq_comms.m_INPUT_tick_count;
-	m_INPUTtickCount   = g_CzmqManager.m_zmq_comms.m_OUTPUT_tick_count;
-
-	//m_RecordRate	   = g_CzmqManager.record_rate;
-	m_isSendingOutput  = g_CzmqManager.m_zmq_comms.m_isSendingOutput;
-	m_isReceivingInput = g_CzmqManager.m_zmq_comms.m_isReceivingInput;
-
-
-	
-	/*
-	if (g_CzmqManager.m_zmq_comms.m_sending_data_buffer == nullptr)
-		m_CurrentDataBuffer = "NO_DATA";
-	else
-		if (zframe_is(g_CzmqManager.m_zmq_comms.m_sending_data_buffer))
-			m_CurrentDataBuffer = zframe_strdup(g_CzmqManager.m_zmq_comms.m_sending_data_buffer);
-	/*
-
-	if (g_CzmqManager.m_zmq_comms.m_sending_metadata != NULL) {
-
-
-		m_CurrentMetaDataBuffer = g_CzmqManager.m_zmq_comms.m_sending_metadata;
+	if (m_last_tick < gpGlobals->tickcount) {
+		m_last_tick = gpGlobals->tickcount;
+		g_CzmqManager.OnTick();
 	}
-	else
-		m_CurrentMetaDataBuffer = "NO_METADATA";
-	*/
-	SetNextThink(gpGlobals->curtime);
+
+}
+
+
+
+
+void CEntRec_Interface::UpdateNetworkedVars()
+{
+	bool isRecordingCvar = cvar->FindVar("kw_entrec_message_record")->GetBool();
+
+	if (isRecordingCvar != m_isRecording) {
+
+		int tickDelayFactor = cvar->FindVar("kw_entrec_record_delay_factor")->GetInt();
+
+		if (isRecordingCvar == true) {
+			m_start_record_tick = gpGlobals->tickcount + tickDelayFactor;
+			g_CzmqManager.m_start_record_tick = m_start_record_tick;
+
+			Msg("kleinworks: m_start_record_tick = [%d].\n", m_start_record_tick);
+		
+
+			m_end_record_tick   = 0;
+			g_CzmqManager.m_end_record_tick = m_end_record_tick;
+
+			g_CzmqManager.SetRecording(isRecordingCvar);
+
+		}
+		else {
+			m_end_record_tick   = gpGlobals->tickcount + tickDelayFactor;
+			g_CzmqManager.m_end_record_tick = m_end_record_tick;
+
+			Msg("kleinworks: m_end_record_tick = [%d].\n", m_end_record_tick);
+
+			m_start_record_tick = 0;
+			g_CzmqManager.m_start_record_tick = m_start_record_tick;
+		}
+
+
+		m_isRecording = isRecordingCvar;
+
+		m_last_tick = gpGlobals->tickcount;
+
+	}
+
 }
 
 

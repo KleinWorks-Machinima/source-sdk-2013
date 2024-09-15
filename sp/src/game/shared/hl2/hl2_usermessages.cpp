@@ -12,6 +12,14 @@
 // NVNT include to register in haptic user messages
 #include "haptics/haptic_msgs.h"
 
+/*========================*/
+/*| KLEINWORKS™ ADDITION |*/
+
+#include "kleinworks/kleinworks_usermessages.h"
+
+/*| KLEINWORKS™ ADDITION |*/
+/*========================*/
+
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
@@ -56,4 +64,12 @@ void RegisterUserMessages( void )
 	// NVNT register haptic user messages
 	RegisterHapticMessages();
 #endif
+
+	/*========================*/
+	/*| KLEINWORKS™ ADDITION |*/
+
+	RegisterEntRecUserMessages();
+
+	/*| KLEINWORKS™ ADDITION |*/
+	/*========================*/
 }

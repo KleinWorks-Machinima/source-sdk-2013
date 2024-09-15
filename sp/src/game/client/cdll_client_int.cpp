@@ -151,6 +151,19 @@
 #include "vscript_client.h"
 #endif
 
+/*========================*/
+/*| KLEINWORKS™ ADDITION |*/
+
+#include "kleinworks/czmq_manager_shared.h"
+#include "kleinworks/kleinworks_usermessages.h"
+
+#undef CreateEvent
+
+extern CzmqManager g_C_zmqManager;
+
+/*| KLEINWORKS™ ADDITION |*/
+/*========================*/
+
 extern vgui::IInputInternal *g_InputInternal;
 
 //=============================================================================
@@ -1133,6 +1146,14 @@ int CHLClient::Init( CreateInterfaceFn appSystemFactory, CreateInterfaceFn physi
 #ifdef MAPBASE
 	CommandLine()->AppendParm( "+r_hunkalloclightmaps", "0" );
 #endif
+
+	/*========================*/
+	/*| KLEINWORKS™ ADDITION |*/
+
+	HookEntRecUserMessages();
+
+	/*| KLEINWORKS™ ADDITION |*/
+	/*========================*/
 
 	return true;
 }
@@ -2301,6 +2322,37 @@ void OnRenderEnd()
 	UpdatePVSNotifiers();
 
 	DisplayBoneSetupEnts();
+
+	/*========================*/
+	/*| KLEINWORKS™ ADDITION |*/
+
+
+	// if we are in the middle of stopping a recording, run anyway
+	if (g_C_zmqManager.m_zmq_comms.m_isDoneTransfering || g_C_zmqManager.m_zmq_comms.m_peerIsDoneTransfering) {
+
+		g_C_zmqManager.OnTick();
+		return;
+	}
+
+	if (engine->IsPaused())
+		return;
+
+
+	if (g_C_zmqManager.m_start_record_tick != 0 && gpGlobals->tickcount < g_C_zmqManager.m_start_record_tick)
+		return;
+
+	if (gpGlobals->tickcount == g_C_zmqManager.m_start_record_tick)
+		Msg("kleinworks_cl_DEBUG: Start record tick [%d].\n", gpGlobals->tickcount);
+
+
+
+	if (g_C_zmqManager.m_last_tick < gpGlobals->tickcount) {
+		g_C_zmqManager.m_last_tick = gpGlobals->tickcount;
+		g_C_zmqManager.OnTick();
+	}
+
+	/*| KLEINWORKS™ ADDITION |*/
+	/*========================*/
 }
 
 

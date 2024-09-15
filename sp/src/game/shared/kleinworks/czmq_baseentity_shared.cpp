@@ -16,31 +16,30 @@
 
 CzmqBaseEntity::CzmqBaseEntity(CBaseHandle hEntity)
 {
+
 #ifdef CLIENT_DLL
 	CBaseEntity* pEntity = cl_entitylist->GetBaseEntityFromHandle(hEntity);
-	const char* modelName = pEntity->GetModelName();
+	
 
 	cl_entitylist->AddListenerEntity(this);
 #else
 	CBaseEntity* pEntity = gEntList.GetBaseEntity(hEntity);
-	const char* modelName = pEntity->GetModelName().ToCStr();
-
+	
 	gEntList.AddListenerEntity(this);
 #endif // CLIENT_DLL
 
 	// we have to do this to avoid taking a reference to GetDebugName() or GetModelName()
 
+	const char* modelname = modelinfo->GetModelName(pEntity->GetModel());
+	
 	int ent_name_len = strlen(pEntity->GetDebugName());
-	int ent_modelname_len = strlen(modelName);
-
+	int ent_modelname_len = strlen(modelname);
 
 	char* ent_name_proxystr = new char[ent_name_len + 1];
 	char* ent_modelname_proxystr = new char[ent_modelname_len + 1];
 
-
 	strcpy_s(ent_name_proxystr, ent_name_len + 1, pEntity->GetDebugName());
-	strcpy_s(ent_modelname_proxystr, ent_modelname_len + 1, modelName);
-
+	strcpy_s(ent_modelname_proxystr, ent_modelname_len + 1, modelname);
 
 
 
@@ -50,9 +49,10 @@ CzmqBaseEntity::CzmqBaseEntity(CBaseHandle hEntity)
 	mh_parent_entity = hEntity;
 	m_ent_type		 = int(ENTREC_TYPES::BASE_ENTITY);
 	m_ent_id		 = hEntity.GetSerialNumber();
+	m_ent_numbones	 = 0;
 
 
-	DevMsg(3, "KleinWorks_DEBUG: Entity of class %s initialized.\n", pEntity->GetClassname());
+	DevMsg(3, "kleinworks_DEBUG: Entity of class %s initialized.\n", pEntity->GetClassname());
 
 }
 
@@ -96,13 +96,7 @@ rapidjson::Value CzmqBaseEntity::GetEntityData(rapidjson::MemoryPoolAllocator<> 
 
 	rapidjson::Value entData_js = rapidjson::Value(rapidjson::kObjectType);
 
-	// avoid taking a reference to the ID string by copying it
-	int	  id_strlen = strlen(CFmtStr("%d", m_ent_id)) + 1;
-
-	char* ent_id = new char[id_strlen];
-	strcpy_s(ent_id, id_strlen, CFmtStr("%d", m_ent_id).String());
-
-	entData_js.AddMember("ent_id", rapidjson::StringRef(ent_id), allocator);
+	entData_js.AddMember("ent_id", m_ent_id, allocator);
 
 	
 
@@ -110,24 +104,27 @@ rapidjson::Value CzmqBaseEntity::GetEntityData(rapidjson::MemoryPoolAllocator<> 
 	
 	AngleQuaternion(pEntity->GetAbsAngles(), entQuatAngle);
 
-	// angles MUST be in quaternions, eulers cause a lot of problems
-	const char* quatAngleStr = static_cast<const char *>(CFmtStr("(%f, %f, %f, %f)", entQuatAngle.w, entQuatAngle.x, entQuatAngle.y, entQuatAngle.z));
+	rapidjson::Value ent_pos_js = rapidjson::Value(rapidjson::kObjectType);
+	rapidjson::Value ent_rot_js = rapidjson::Value(rapidjson::kObjectType);
+
+	rapidjson::Value ent_origin_js = rapidjson::Value(rapidjson::kObjectType);
+	rapidjson::Value ent_quat_js   = rapidjson::Value(rapidjson::kObjectType);
 
 
-	// have to do this little maneuver to avoid taking a reference of VecToString
-	int absOriginStrlen  = strlen(VecToString(pEntity->GetAbsOrigin()));
-	int quatAnglesStrlen = strlen(quatAngleStr);
+	ent_origin_js.AddMember("x", pEntity->GetAbsOrigin().x, allocator);
+	ent_origin_js.AddMember("y", pEntity->GetAbsOrigin().y, allocator);
+	ent_origin_js.AddMember("z", pEntity->GetAbsOrigin().z, allocator);
 
+	ent_quat_js.AddMember("w", entQuatAngle.w, allocator);
+	ent_quat_js.AddMember("x", entQuatAngle.x, allocator);
+	ent_quat_js.AddMember("y", entQuatAngle.y, allocator);
+	ent_quat_js.AddMember("z", entQuatAngle.z, allocator);
 
-	char* entAbsOrigin_proxystr = new char[absOriginStrlen + 1];
-	char* entQuatAngles_proxystr = new char[quatAnglesStrlen + 1];
+	ent_pos_js.AddMember("0", ent_origin_js, allocator);
+	ent_rot_js.AddMember("0", ent_quat_js, allocator);
 
-
-	strcpy_s(entAbsOrigin_proxystr, absOriginStrlen + 1, VecToString(pEntity->GetAbsOrigin()));
-	strcpy_s(entQuatAngles_proxystr, quatAnglesStrlen + 1, quatAngleStr);
-
-	entData_js.AddMember("VEC_ORIGIN", rapidjson::StringRef(entAbsOrigin_proxystr), allocator);
-	entData_js.AddMember("QANGLE_ANGLES", rapidjson::StringRef(entQuatAngles_proxystr), allocator);
+	entData_js.AddMember("ent_pos", ent_pos_js, allocator);
+	entData_js.AddMember("ent_rot", ent_rot_js, allocator);
 	
 
 	return entData_js;
@@ -139,19 +136,37 @@ rapidjson::Value CzmqBaseEntity::GetEntityMetaData(rapidjson::MemoryPoolAllocato
 {
 	rapidjson::Value entMetaData_js = rapidjson::Value(rapidjson::kObjectType);
 
-	// avoid taking a reference to the ID string by copying it
-	int	  id_strlen = strlen(CFmtStr("%d", m_ent_id)) + 1;
+	entMetaData_js.AddMember("ent_id", m_ent_id, allocator);
+	entMetaData_js.AddMember("ent_type", m_ent_type, allocator);
+	entMetaData_js.AddMember("ent_numbones", m_ent_numbones, allocator);
 
-	char* ent_id = new char[id_strlen];
-	strcpy_s(ent_id, id_strlen, CFmtStr("%d", m_ent_id).String());
-
-	entMetaData_js.AddMember("ent_id", rapidjson::StringRef(ent_id), allocator);
-
-	entMetaData_js.AddMember("ent_name",      rapidjson::StringRef(m_ent_name), allocator);
-	entMetaData_js.AddMember("ent_type",      m_ent_type, allocator);
-	entMetaData_js.AddMember("ent_modelpath", rapidjson::StringRef(m_ent_model), allocator);
+	entMetaData_js.AddMember("ent_name",  rapidjson::StringRef(m_ent_name), allocator);
+	entMetaData_js.AddMember("ent_model", rapidjson::StringRef(m_ent_model), allocator);
 
 	return entMetaData_js;
+}
+
+
+
+bool CzmqBaseEntity::IsValid()
+{
+	if (!mh_parent_entity.IsValid())
+	{
+		return false;
+	}
+
+#ifdef CLIENT_DLL
+	CBaseEntity* pEntity = cl_entitylist->GetBaseEntityFromHandle(mh_parent_entity);
+#else
+	CBaseEntity* pEntity = gEntList.GetBaseEntity(mh_parent_entity);
+#endif // CLIENT_DLL
+
+	if (pEntity == nullptr)
+	{
+		return false;
+	}
+	
+	return true;
 }
 
 

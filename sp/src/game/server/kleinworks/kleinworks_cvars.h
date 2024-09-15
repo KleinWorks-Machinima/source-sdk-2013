@@ -19,16 +19,13 @@
 #include "bone_setup.h"
 
 #include "kleinworks/czmq_manager_shared.h"
+#include "kleinworks/kleinworks_usermessages.h"
 
-#ifdef CLIENT_DLL
-#define kleinworks_msg_header "kleinworks_cl:"
-
-#else
-#define kleinworks_msg_header "kleinworks_sv:"
-
-#endif // CLIENT_DLL
 
 extern CzmqManager g_CzmqManager;
+
+
+
 
 
 
@@ -36,8 +33,10 @@ void h_RecordUntilCvarChanged(IConVar *var, const char *pOldValue, float flOldVa
 {
 	int value = ConVarRef(var).GetInt();
 	
-	Msg(kleinworks_msg_header, " Set maximum recorded tick from %d to %d!\n", g_CzmqManager.m_RecordUntil, value);
-	g_CzmqManager.m_RecordUntil = value;
+	Msg("kleinworks_sv: Set maximum recorded tick from %d to %d!\n", g_CzmqManager.m_record_until, value);
+	g_CzmqManager.m_record_until = value;
+
+	Send_EntRecRecordUntil_Msg(value);
 
 }
 
@@ -45,8 +44,11 @@ void h_DropoutToleranceChanged(IConVar *var, const char *pOldValue, float flOldV
 {
 	int value = ConVarRef(var).GetInt();
 
-	Msg(kleinworks_msg_header, " Set EntRec message drop-out tolerance from %d to %d!\n", g_CzmqManager.m_zmq_comms.m_drop_out_tolerance, value);
+	Msg("kleinworks_sv: Set EntRec message drop-out tolerance from %d to %d!\n", g_CzmqManager.m_zmq_comms.m_drop_out_tolerance, value);
 	g_CzmqManager.m_zmq_comms.m_drop_out_tolerance = value;
+
+	Send_EntRecDropoutTolerance_Msg(value);
+
 }
 
 ConVar cvar_kleinworks_record_until(
@@ -84,6 +86,17 @@ ConVar cvar_kleinworks_record(
 			 /*fMax*/	1
 );
 
+ConVar cvar_kleinworks_record_delay_factor(
+	/*pName*/	"kw_entrec_record_delay_factor",
+	/*pDefaultValue*/	"5",
+	/*flags*/	FCVAR_REPLICATED,
+	/*pHelpString*/	"For synchronizing the Server and Client when a recording starts/ends, EntRec delays starting or ending a recording by x number of ticks.",
+	/*bMin*/	true,
+	/*fMin*/	0,
+	/*bMax*/	false,
+	/*fMax*/	0
+	);
+
 
 
 
@@ -111,7 +124,7 @@ CON_COMMAND(kw_entrec_record, "Toggle for the KleinWorks EntRec system, 1 = reco
 			recordBool = false;
 	}
 
-	g_CzmqManager.SetRecording(recordBool);
+
 	cvar_kleinworks_record.SetValue(recordBool);
 }
 
@@ -121,15 +134,41 @@ CON_COMMAND(kw_entrec_record, "Toggle for the KleinWorks EntRec system, 1 = reco
 
 CON_COMMAND(kw_entrec_reset_sockets, "Disconnects then reconnects all sockets, aborting any active/hanging data transfers.")
 {
-	Msg(kleinworks_msg_header, " Reconnecting sockets...\n");
+	Msg("kleinworks_sv: Reconnecting sockets...\n");
 
 	g_CzmqManager.m_zmq_comms.DisconnectSockets();
 
 	zclock_sleep(200);
 
-	g_CzmqManager.m_zmq_comms.ConnectSockets(5555, 5556);
+	g_CzmqManager.m_zmq_comms.ConnectSockets(KW_INPUT_PORTNUM, KW_OUTPUT_PORTNUM);
 
-	Msg(kleinworks_msg_header, " Reconnected all sockets!\n");
+	Msg("kleinworks_sv: Reconnected all sockets!\n");
+
+	Send_EntRecResetSockets_Msg();
+
+}
+
+
+
+
+
+CON_COMMAND(kw_entrec_print, "Prints the ID's of every entity currently selected for EntRec recording.")
+{
+	Msg("kleinworks_sv: Printing all entities from EntRec selection...\n\n");
+
+	int size = int(g_CzmqManager.m_pSelected_EntitiesList.size());
+
+	for (int i = 0; i < size; i++) {
+		CzmqBaseEntity* pEnt = g_CzmqManager.m_pSelected_EntitiesList[i].get();
+
+		const char* pEntName = pEnt->m_ent_name;
+
+		Msg("[%d] # - : name:\"%s\"\n", i, pEntName);
+	}
+	Msg("\nkleinworks_sv: Printed all entites from EntRec selection!\n");
+
+	Send_EntRecPrint_Msg();
+
 }
 
 
@@ -141,62 +180,41 @@ extern CBaseEntity *FindEntityForward(CBasePlayer *pMe, bool fHull);
 CON_COMMAND(kw_entrec_select, "Select an entity for recording by name. If no arguments are passed, selects any entity under the Player's crosshair.")
 {
 
-#ifdef CLIENT_DLL
-	CBasePlayer* pPlayer = ToBasePlayer(cl_entitylist->GetBaseEntity(engine->GetLocalPlayer()));
-#else
 	CBasePlayer* pPlayer = UTIL_GetLocalPlayer();
-#endif // CLIENT_DLL
 
 	CBaseEntity* pEntityToSelect = nullptr;
 
 	if (args.ArgC() <= 1 || args.Arg(1) == NULL)
 	{
+		Send_AddEntForwardToRec_Msg();
+
 		if (FindEntityForward(pPlayer, true) != nullptr)
 		{
 			pEntityToSelect = FindEntityForward(pPlayer, true);
-			g_CzmqManager.AddEntityToSelection(pEntityToSelect->GetRefEHandle());
+
+			CBaseHandle hEntity = pEntityToSelect->GetRefEHandle();
+
+			g_CzmqManager.AddEntityToSelection(hEntity);
 
 			return;
 		}
-		Msg(kleinworks_msg_header, " Found no entities under Player crosshair to add to EntRec selection.\n");
+		Msg("kleinworks_sv: Found no entities under Player crosshair to add to EntRec selection.\n");
 		return;
 	}
-	
-#ifdef CLIENT_DLL
-	return;
-
-#else
 	pEntityToSelect = gEntList.FindEntityByName(NULL, args.Arg(1));
 
 	if (pEntityToSelect != NULL) {
-		g_CzmqManager.AddEntityToSelection(pEntityToSelect->GetRefEHandle());
+
+		CBaseHandle hEntity = pEntityToSelect->GetRefEHandle();
+
+		g_CzmqManager.AddEntityToSelection(hEntity);
+
+		Send_AddEntToRec_Msg(hEntity.GetEntryIndex(), hEntity.GetSerialNumber());
 
 		return;
 	}
 
-	Msg(kleinworks_msg_header, " Found no entities named [%s] to add to EntRec selection.\n", args.Arg(1));
-
-#endif // CLIENT_DLL
-}
-
-
-
-
-
-CON_COMMAND(kw_entrec_print, "Prints the ID's of every entity currently selected for EntRec recording.")
-{
-	Msg(kleinworks_msg_header, " Printing all entities from EntRec selection...\n\n");
-
-	int size = int(g_CzmqManager.m_pSelected_EntitiesList.size());
-
-	for (int i = 0; i < size; i++) {
-		CzmqBaseEntity* pEnt = g_CzmqManager.m_pSelected_EntitiesList[i].get();
-
-		const char* pEntName = pEnt->m_ent_name;
-
-		Msg("[%d] # - : name:\"%s\"\n", i, pEntName);
-	}
-	Msg("\nKleinWorks: Printed all entites from EntRec selection!\n");
+	Msg("kleinworks_sv: Found no entities named [%s] to add to EntRec selection.\n", args.Arg(1));
 }
 
 
@@ -205,11 +223,7 @@ CON_COMMAND(kw_entrec_print, "Prints the ID's of every entity currently selected
 CON_COMMAND(kw_entrec_deselect, "Removes an entity from EntRec selection by ID.")
 {
 
-#ifdef CLIENT_DLL
-	CBasePlayer* pPlayer = ToBasePlayer(cl_entitylist->GetBaseEntity(engine->GetLocalPlayer()));
-#else
 	CBasePlayer* pPlayer = UTIL_GetLocalPlayer();
-#endif // CLIENT_DLL
 
 	CBaseEntity* pEntityToDeselect = nullptr;
 
@@ -218,8 +232,10 @@ CON_COMMAND(kw_entrec_deselect, "Removes an entity from EntRec selection by ID."
 	// if no arguments are passed, try to deselect any entities under Player's crosshair from selection
 	if (args.ArgC() <= 1 || args.Arg(1) == NULL)
 	{
+		Send_RemoveEntForwardFromRec_Msg();
+
 		if (FindEntityForward(pPlayer, true) == nullptr) {
-			Msg(kleinworks_msg_header, " Found no entities under Player crosshair to remove from EntRec selection.\n");
+			Msg("kleinworks_sv: Found no entities under Player crosshair to remove from EntRec selection.\n");
 			return;
 		}
 
@@ -234,11 +250,14 @@ CON_COMMAND(kw_entrec_deselect, "Removes an entity from EntRec selection by ID."
 			int entIndex = stoi(argStr);
 
 			if (int(g_CzmqManager.m_pSelected_EntitiesList.size()) <= entIndex) {
-				Msg(kleinworks_msg_header, " No entity at index [%d] in selected entities list.\n", entIndex);
+				Msg("kleinworks_sv: No entity at index [%d] in selected entities list.\n", entIndex);
 				return;
 			}
 
 			CzmqBaseEntity* pEnt = g_CzmqManager.m_pSelected_EntitiesList[entIndex].get();
+
+			Send_RemoveEntFromRec_Msg(pEnt->m_ent_id);
+
 			g_CzmqManager.RemoveEntityFromSelection(pEnt);
 
 			return;
@@ -252,38 +271,40 @@ CON_COMMAND(kw_entrec_deselect, "Removes an entity from EntRec selection by ID."
 	for (int i = 0; i < int(g_CzmqManager.m_pSelected_EntitiesList.size()); i++) {
 		CzmqBaseEntity* pEnt = g_CzmqManager.m_pSelected_EntitiesList[i].get();
 
-		DevMsg(4, "KleinWorks_DEBUG: Checking ent #[%d]: ent_name - [%s] for match with arg [%s].\n", i, pEnt->m_ent_name, entToDeselectName);
+		DevMsg(4, "kleinworks_sv_DEBUG: Checking ent #[%d]: ent_name - [%s] for match with arg [%s].\n", i, pEnt->m_ent_name, entToDeselectName);
 
 		if (strcmp(pEnt->m_ent_name, entToDeselectName) == 0) {
+
 			g_CzmqManager.RemoveEntityFromSelection(pEnt);
 			return;
 		}
 	}
 
-	Msg(kleinworks_msg_header, " Found no entities named [%s] to remove from EntRec selection.\n", args.Arg(1));
+	Msg("kleinworks_sv: Found no entities named [%s] to remove from EntRec selection.\n", args.Arg(1));
 }
 
 
 
 CON_COMMAND(kw_entrec_deselect_all, "Removes every entity from EntRec selection.")
 {
-	Msg(kleinworks_msg_header, " Attemping to clear EntRec entity selection...\n");
+	Msg("kleinworks_sv: Attemping to clear EntRec entity selection...\n");
 
 	g_CzmqManager.ClearEntitySelection();
 
-	Msg(kleinworks_msg_header, " Cleared EntRec entity selection.\n");
+	Msg("kleinworks_sv: Cleared EntRec entity selection.\n");
+
+	Send_EntRecClearSelection_Msg();
+
 }
+
 
 
 
 CON_COMMAND(kw_dbg_skel, "Debug command")
 {
 
-#ifdef CLIENT_DLL
-	CBasePlayer* pPlayer = ToBasePlayer(cl_entitylist->GetBaseEntity(engine->GetLocalPlayer()));
-#else
 	CBasePlayer* pPlayer = UTIL_GetLocalPlayer();
-#endif // CLIENT_DLL
+
 
 
 	CBaseEntity* pEntity = nullptr;
@@ -298,7 +319,7 @@ CON_COMMAND(kw_dbg_skel, "Debug command")
 
 		CzmqBaseSkeletal newSkelEnt = pEntity->GetRefEHandle();
 
-		Msg(kleinworks_msg_header, " Finished.\n");
+		Msg("kleinworks_sv: Finished.\n");
 
 		/*
 		CBaseAnimating* pAnimating = pEntity->GetBaseAnimating();
