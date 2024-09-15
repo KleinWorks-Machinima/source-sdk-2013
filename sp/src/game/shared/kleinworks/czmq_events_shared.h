@@ -12,30 +12,36 @@
 #include "czmq_baseentity_shared.h"
 
 
-
-
-
-
-
-struct EntEvent_t
+const enum class ENTREC_EVENT : int
 {
-	int				event_type;
+	ENT_CREATED    = 0xE01,
+	ENT_BROKEN     = 0xE02,
+	ENT_DELETED    = 0xE03,
+
+	EFFECT_CREATED = 0xE04,
+
+	SOUND_CREATED  = 0xE05,
+};
+
+
+
+
+struct EntRecEvent_t
+{
+	ENTREC_EVENT	event_type;
 	int				ent_id;
 	CzmqBaseEntity* p_entity = nullptr;
 
+	int					  sound_volume;
+	int					  sound_pitch;
+	float				  sound_time;
+	char*			      sound_name;
+	CUtlVector< Vector >  sound_origins;
 
 
-	rapidjson::Value ParseEvent(rapidjson::MemoryPoolAllocator<> &allocator)
-	{
-		rapidjson::Value ent_event_js;
+	rapidjson::Value ParseEntEvent(   rapidjson::MemoryPoolAllocator<> &allocator);
+	rapidjson::Value ParseSoundEvent( rapidjson::MemoryPoolAllocator<> &allocator);
+	rapidjson::Value ParseEffectEvent(rapidjson::MemoryPoolAllocator<> &allocator);
 
-
-		ent_event_js.AddMember("event_type", event_type, allocator);
-		ent_event_js.AddMember("ent_id", ent_id, allocator);
-		if (p_entity != nullptr)
-			ent_event_js.AddMember("ent_metadata", p_entity->GetEntityMetaData(allocator), allocator);
-
-		return ent_event_js;
-	}
-
+	rapidjson::Value ParseEventByType(rapidjson::MemoryPoolAllocator<> &allocator);
 };

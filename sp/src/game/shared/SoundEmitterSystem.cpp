@@ -27,6 +27,15 @@
 #ifndef CLIENT_DLL
 #include "envmicrophone.h"
 #include "sceneentity.h"
+
+/*========================*/
+/*| KLEINWORKS™ ADDITION |*/
+
+#include "kleinworks/czmq_manager_shared.h"
+
+/*| KLEINWORKS™ ADDITION |*/
+/*========================*/
+
 #else
 #include <vgui_controls/Controls.h>
 #include <vgui/IVGui.h>
@@ -597,6 +606,23 @@ public:
 			  ep.m_pSoundName[0] == '!' ) )
 		{
 #if !defined( CLIENT_DLL )
+			/*========================*/
+			/*| KLEINWORKS™ ADDITION |*/
+
+			// KleinWorks hook for recording sounds
+			CzmqManager::OnSoundPlayed(
+				entindex,
+				ep.m_pSoundName,
+				ep.m_SoundLevel,
+				ep.m_flVolume,
+				ep.m_nFlags,
+				ep.m_nPitch,
+				ep.m_flSoundTime,
+				ep.m_UtlVecSoundOrigin);
+			
+
+			/*| KLEINWORKS™ ADDITION |*/
+			/*========================*/
 			bool bSwallowed = CEnvMicrophone::OnSoundPlayed( 
 				entindex, 
 				ep.m_pSoundName, 

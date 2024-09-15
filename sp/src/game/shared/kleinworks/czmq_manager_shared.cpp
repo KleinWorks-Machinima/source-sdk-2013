@@ -222,13 +222,11 @@ void CzmqManager::UpdateSelectedEntities()
 	if (!m_ent_events.empty()) {
 		entityData_js.AddMember("ent_events", rapidjson::kObjectType, allocator);
 
-		for (auto& ent_event : m_ent_events) {
-			char* ent_id_str = new char[strlen(std::to_string(ent_event.ent_id).c_str()) + 1];
+		for (auto ent_event : m_ent_events) 
+			entityData_js["ent_events"].AddMember("", ent_event.ParseEventByType(allocator), allocator);
 
-			strcpy_s(ent_id_str, strlen(std::to_string(ent_event.ent_id).c_str()) + 1, std::to_string(ent_event.ent_id).c_str());
-
-			entityData_js["ent_events"].AddMember(rapidjson::StringRef(ent_id_str), ent_event.ParseEvent(allocator), allocator);
-		}
+		// clear the list after parsing all events
+		m_ent_events.clear();
 	}
 
 	// convert the entity data document into a string
@@ -533,6 +531,27 @@ CzmqManager g_C_zmqManager = CzmqManager();
 #else
 
 CzmqManager g_CzmqManager = CzmqManager();
+
+
+
+void CzmqManager::OnSoundPlayed(int entindex, const char *soundname, soundlevel_t soundlevel, float flVolume, int iFlags, int iPitch, float soundtime, CUtlVector< Vector >& soundorigins)
+{
+	EntRecEvent_t soundEvent;
+
+	soundEvent.ent_id	  = entindex;
+	soundEvent.event_type = ENTREC_EVENT::SOUND_CREATED;
+
+	soundEvent.sound_volume  = flVolume;
+	soundEvent.sound_pitch   = iPitch;
+	soundEvent.sound_time    = soundtime;
+	soundEvent.sound_origins = soundorigins;
+
+	soundEvent.sound_name	 = new char[strlen(soundname) + 1];
+	strcpy_s(soundEvent.sound_name, strlen(soundname) + 1, soundname);
+
+
+	g_CzmqManager.m_ent_events.push_back(soundEvent);
+}
 
 #endif // CLIENT_DLL
 

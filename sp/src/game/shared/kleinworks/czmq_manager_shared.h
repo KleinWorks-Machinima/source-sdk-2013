@@ -42,6 +42,8 @@
 #define kleinworks_msg_header "kleinworks_sv"
 
 #include "player.h"
+#include "soundent.h"
+#include "soundflags.h"
 
 #endif // CLIENT_DLL
 
@@ -61,7 +63,7 @@ public:
 public:
 	std::vector<std::unique_ptr<CzmqBaseEntity>> m_pSelected_EntitiesList;
 
-	std::list<EntEvent_t>						 m_ent_events;
+	std::list<EntRecEvent_t>					 m_ent_events;
 	
 	
 	int	 m_record_until;
@@ -83,8 +85,6 @@ public:
 	void	RemoveEntityFromSelection(CzmqBaseEntity* pEntity);
 	void	RemoveEntityFromSelection(int serialNumber);
 	void	AddEntityToSelection(CBaseHandle hEntity);
-
-
 	void	ClearEntitySelection();
 
 	void	SetRecording(bool value);
@@ -93,6 +93,10 @@ public:
 
 	int		AttemptEstablishRecording();
 
+
+#ifndef CLIENT_DLL
+	static void			 OnSoundPlayed(int entindex, const char *soundname, soundlevel_t soundlevel, float flVolume, int iFlags, int iPitch, float soundtime, CUtlVector< Vector >& soundorigins);
+#endif
 
 private:
 
