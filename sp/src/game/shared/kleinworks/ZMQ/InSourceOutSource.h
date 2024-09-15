@@ -82,6 +82,18 @@ namespace srcIPC
 		//  for every DATA_MESSAGE sent, and resets back to 0 once data transfer is done.
 		int m_OUTPUT_tick_count;
 
+		//	Represents the current Source Engine tick a Data Message was sent on. Not to be
+		//	confused with 'm_INPUT_tick_count' or 'm_OUTPUT_tick_count', which only function
+		//	to keep track of how many messages were sent/recieved.
+		//	This is also only used by OUTPUT and doesn't affect INPUT.
+		int m_ENGINE_tick_count;
+
+		//	Represents the Source Engine tick of the latest received Data Message. Not to be
+		//	confused with 'm_INPUT_tick_count' or 'm_OUTPUT_tick_count', which only function
+		//	to keep track of how many messages were sent/recieved.
+		//	This is also only used by INPUT and doesn't affect OUTPUT.
+		int m_peer_ENGINE_tick_count;
+
 		//  Set to 1 by default, this is how many miliseconds our sockets will wait when
 		//  polling for incoming messages.
 		int m_pollerTimeout;

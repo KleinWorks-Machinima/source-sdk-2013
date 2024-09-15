@@ -68,6 +68,8 @@ InSourceOutSource::InSourceOutSource(int INPUTportnumber, int OUTPUTportnumber)
 
 	m_INPUT_tick_count  = 0;
 	m_OUTPUT_tick_count = 0;
+	m_ENGINE_tick_count = 0;
+	m_peer_ENGINE_tick_count = 0;
 
 	m_pollerTimeout		 = 1;
 	m_drop_out_tolerance = 30;
@@ -106,6 +108,8 @@ InSourceOutSource::InSourceOutSource()
 
 	m_INPUT_tick_count  = 0;
 	m_OUTPUT_tick_count = 0;
+	m_ENGINE_tick_count = 0;
+	m_peer_ENGINE_tick_count = 0;
 
 
 	m_pollerTimeout	     = 1;
@@ -244,6 +248,8 @@ int InSourceOutSource::DisconnectSockets()
 
 	m_INPUT_tick_count  = 0;
 	m_OUTPUT_tick_count = 0;
+	m_ENGINE_tick_count = 0;
+	m_peer_ENGINE_tick_count = 0;
 
 	m_isDoneTransfering		= false;
 	m_peerIsDoneTransfering = false;
@@ -325,6 +331,7 @@ int InSourceOutSource::OutputReady(bool isInFuncLoop)
 
 			m_isSendingOutput = false;
 			m_OUTPUT_tick_count = 0;
+			m_ENGINE_tick_count = 0;
 			m_isDoneTransfering = false;
 
 			zmsg_destroy(&std::get<1>(messageTuple));
@@ -405,6 +412,7 @@ int InSourceOutSource::InputReady(bool isInFuncLoop)
 			m_isReceivingInput = false;
 			m_peerIsDoneTransfering = false;
 			m_INPUT_tick_count = 0;
+			m_peer_ENGINE_tick_count = 0;
 
 			zmsg_destroy(&std::get<1>(messageTuple));
 
@@ -473,6 +481,7 @@ int InSourceOutSource::TransferData(bool isInFuncLoop)
 			return -1;
 
 		m_OUTPUT_tick_count = 0;
+		m_ENGINE_tick_count = 0;
 		m_lastTickReceivedByPeer = 0;
 
 		zmsg_t* transferingDataMessage = srcIPCMessage::TransferingData_t::New(m_OUTPUT_tick_count, zframe_new(m_sending_metadata, strlen(m_sending_metadata)));
@@ -508,6 +517,7 @@ int InSourceOutSource::TransferData(bool isInFuncLoop)
 
 			m_isSendingOutput = false;
 			m_OUTPUT_tick_count = 0;
+			m_ENGINE_tick_count = 0;
 			m_isDoneTransfering = false;
 
 			zmsg_destroy(&std::get<1>(messageTuple));
@@ -535,6 +545,7 @@ int InSourceOutSource::TransferData(bool isInFuncLoop)
 				//Msg("TransferData: Received last RECEIVED_DATA message from peer! Ending data transfer.\n");
 				m_isDoneTransfering = false;
 				m_OUTPUT_tick_count = 0;
+				m_ENGINE_tick_count = 0;
 
 				zmsg_destroy(&std::get<1>(messageTuple));
 				zframe_destroy(&first_frame);
@@ -583,7 +594,7 @@ int InSourceOutSource::TransferData(bool isInFuncLoop)
 	m_OUTPUT_tick_count++;
 
 	// Sending data messages
-	zmsg_t* dataMessage = srcIPCMessage::DataMessage_t::New(m_OUTPUT_tick_count, m_sending_data_buffer);
+	zmsg_t* dataMessage = srcIPCMessage::DataMessage_t::New(m_ENGINE_tick_count, m_sending_data_buffer);
 
 	if (zmsg_send(&dataMessage, m_sockt_OUTPUT) != 0) {
 		//printf("\nTransferData: Error! Failed to send data message!\n");
@@ -607,6 +618,7 @@ int InSourceOutSource::TransferData(bool isInFuncLoop)
 
 		m_isSendingOutput = false;
 		m_OUTPUT_tick_count = 0;
+		m_ENGINE_tick_count = 0;
 		m_isDoneTransfering = false;
 
 		return 0;
@@ -631,6 +643,7 @@ int InSourceOutSource::ReceiveData(bool isInFuncLoop)
 		if (InputReady(isInFuncLoop) != 0)
 			return -1;
 		m_INPUT_tick_count = 0;
+		m_peer_ENGINE_tick_count = 0;
 
 	}
 
@@ -652,6 +665,7 @@ int InSourceOutSource::ReceiveData(bool isInFuncLoop)
 			m_isReceivingInput = false;
 			m_peerIsDoneTransfering = false;
 			m_INPUT_tick_count = 0;
+			m_peer_ENGINE_tick_count = 0;
 
 			return 0;
 		}
@@ -688,6 +702,7 @@ int InSourceOutSource::ReceiveData(bool isInFuncLoop)
 			m_isReceivingInput = false;
 			m_peerIsDoneTransfering = false;
 			m_INPUT_tick_count = 0;
+			m_peer_ENGINE_tick_count = 0;
 
 			zmsg_destroy(&std::get<1>(messageTuple));
 
@@ -733,6 +748,7 @@ int InSourceOutSource::ReceiveData(bool isInFuncLoop)
 			zframe_t* fourth_frame = zmsg_pop(std::get<1>(messageTuple));
 			assert(fourth_frame);
 
+			memcpy(&m_peer_ENGINE_tick_count, zframe_data(third_frame), sizeof(int));
 
 			zmsg_destroy(&std::get<1>(messageTuple));
 			zframe_destroy(&first_frame);
@@ -853,7 +869,7 @@ std::tuple<src_IPC_MESSAGE, zmsg_t*> InSourceOutSource::PollSocketForMessages(zs
 		}
 
 
-		// if the message was of no known message type, or if message isnt an INPUT message
+			// if the message was of no known message type, or if message isnt an INPUT message
 		default: {
 			break;
 		}
@@ -862,7 +878,7 @@ std::tuple<src_IPC_MESSAGE, zmsg_t*> InSourceOutSource::PollSocketForMessages(zs
 
 
 		// now check second frame for OUTPUT messages
-		
+
 		zframe_t* second_frame = zmsg_pop(duplicateMessage);
 		assert(second_frame);
 
@@ -871,6 +887,8 @@ std::tuple<src_IPC_MESSAGE, zmsg_t*> InSourceOutSource::PollSocketForMessages(zs
 
 
 		zmsg_destroy(&duplicateMessage);
+
+
 
 
 		switch (second_frame_MessageType) {
@@ -897,7 +915,7 @@ std::tuple<src_IPC_MESSAGE, zmsg_t*> InSourceOutSource::PollSocketForMessages(zs
 		}
 
 
-		// if the message was of no known message type
+			// if the message was of no known message type
 		default: {
 			return std::tuple<src_IPC_MESSAGE, zmsg_t*>(src_IPC_MESSAGE::NO_MESSAGE, NULL);;
 		}

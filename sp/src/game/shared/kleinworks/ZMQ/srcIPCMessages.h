@@ -147,7 +147,7 @@ namespace srcIPCMessage
 	struct DataMessage_t
 	{
 
-		static zmsg_t* New(int tickCount, zframe_t* data_frame) {
+		static zmsg_t* New(int engineTickCount, zframe_t* data_frame) {
 
 
 			zmsg_t* dataMessage = zmsg_new();
@@ -155,9 +155,9 @@ namespace srcIPCMessage
 			src_IPC_MESSAGE msgType = src_IPC_MESSAGE::DATA_MESSAGE;
 
 
-			zframe_t* msgType_frame = zframe_new(&msgType, sizeof(msgType));
+			zframe_t* msgType_frame = zframe_new(&msgType, sizeof(int));
 
-			zframe_t* tickCount_frame = zframe_new(&tickCount, sizeof(tickCount));
+			zframe_t* tickCount_frame = zframe_new(&engineTickCount, sizeof(int));
 
 
 			zmsg_append(dataMessage, &msgType_frame);
