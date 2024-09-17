@@ -95,7 +95,7 @@ public:
 
 
 #ifndef CLIENT_DLL
-	static void			 OnSoundPlayed(int entindex, const char *soundname, soundlevel_t soundlevel, float flVolume, int iFlags, int iPitch, const Vector *pOrigin, float soundtime, CUtlVector< Vector >& soundorigins);
+	static void			 OnSoundPlayed(int entindex, const char *soundname, soundlevel_t soundlevel, float flVolume, int iFlags, int iPitch, const Vector *pOrigin, float soundtime, float* soundDuration, CUtlVector< Vector >& soundorigins);
 #endif
 
 private:

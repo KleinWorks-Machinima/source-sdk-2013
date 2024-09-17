@@ -37,6 +37,7 @@ struct EntRecEvent_t
 	int					  sound_volume;
 	int					  sound_pitch;
 	float				  sound_time;
+	float				  sound_duration;
 	char*			      sound_name;
 	Vector				  sound_origin;
 	std::list<Vector>     sound_origins;

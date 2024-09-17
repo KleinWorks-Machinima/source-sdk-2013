@@ -47,6 +47,7 @@ rapidjson::Value  EntRecEvent_t::ParseSoundEvent(rapidjson::MemoryPoolAllocator<
 	sound_event_js.AddMember("sound_volume", sound_volume, allocator);
 	sound_event_js.AddMember("sound_pitch", sound_pitch, allocator);
 	sound_event_js.AddMember("sound_time", sound_time, allocator);
+	sound_event_js.AddMember("sound_duration", sound_duration, allocator);
 
 	rapidjson::Value sound_origin_js(rapidjson::kObjectType);
 

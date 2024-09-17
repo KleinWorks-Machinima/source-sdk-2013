@@ -534,7 +534,7 @@ CzmqManager g_CzmqManager = CzmqManager();
 
 
 
-void CzmqManager::OnSoundPlayed(int entindex, const char *soundname, soundlevel_t soundlevel, float flVolume, int iFlags, int iPitch, const Vector *pOrigin, float soundtime, CUtlVector< Vector >& soundorigins)
+void CzmqManager::OnSoundPlayed(int entindex, const char *soundname, soundlevel_t soundlevel, float flVolume, int iFlags, int iPitch, const Vector *pOrigin, float soundtime, float* soundDuration, CUtlVector< Vector >& soundorigins)
 {
 	if (!g_CzmqManager.m_record_toggle)
 		return;
@@ -544,11 +544,16 @@ void CzmqManager::OnSoundPlayed(int entindex, const char *soundname, soundlevel_
 	soundEvent.ent_id	  = entindex;
 	soundEvent.event_type = static_cast<int>(ENTREC_EVENT::SOUND_CREATED);
 
-	Msg("kleinworks_DEBUG: OnSoundPlayed triggered, sound name = [%s] with type number = [%d].\n", soundname, soundEvent.event_type);
 
 	soundEvent.sound_volume   = flVolume;
 	soundEvent.sound_pitch    = iPitch;
 	soundEvent.sound_time     = soundtime;
+	if (soundDuration != nullptr)
+		soundEvent.sound_duration = *soundDuration;
+	else
+		soundEvent.sound_duration = -1;
+
+	Msg("kleinworks_DEBUG: OnSoundPlayed triggered, sound name = [%s] with duration = [%d].\n", soundname, soundEvent.sound_duration);
 
 	if (pOrigin != nullptr) {
 		soundEvent.sound_origin.x = pOrigin->x;

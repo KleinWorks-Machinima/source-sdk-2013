@@ -619,6 +619,7 @@ public:
 				ep.m_nPitch,
 				ep.m_pOrigin,
 				ep.m_flSoundTime,
+				ep.m_pflSoundDuration,
 				ep.m_UtlVecSoundOrigin);
 			
 
