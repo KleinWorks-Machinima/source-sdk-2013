@@ -15,7 +15,7 @@
 
 rapidjson::Value  EntRecEvent_t::ParseEntEvent(rapidjson::MemoryPoolAllocator<> &allocator)
 {
-	rapidjson::Value ent_event_js;
+	rapidjson::Value ent_event_js(rapidjson::kObjectType);
 
 	ent_event_js.AddMember("event_type", event_type, allocator);
 	ent_event_js.AddMember("ent_id", ent_id, allocator);
@@ -38,7 +38,7 @@ rapidjson::Value  EntRecEvent_t::ParseEffectEvent(rapidjson::MemoryPoolAllocator
 
 rapidjson::Value  EntRecEvent_t::ParseSoundEvent(rapidjson::MemoryPoolAllocator<> &allocator)
 {
-	rapidjson::Value sound_event_js;
+	rapidjson::Value sound_event_js(rapidjson::kObjectType);
 
 	sound_event_js.AddMember("event_type", event_type, allocator);
 	sound_event_js.AddMember("ent_id", ent_id, allocator);
@@ -48,6 +48,13 @@ rapidjson::Value  EntRecEvent_t::ParseSoundEvent(rapidjson::MemoryPoolAllocator<
 	sound_event_js.AddMember("sound_pitch", sound_pitch, allocator);
 	sound_event_js.AddMember("sound_time", sound_time, allocator);
 
+	rapidjson::Value sound_origin_js(rapidjson::kObjectType);
+
+	sound_origin_js.AddMember("x", sound_origin.x, allocator);
+	sound_origin_js.AddMember("y", sound_origin.y, allocator);
+	sound_origin_js.AddMember("z", sound_origin.z, allocator);
+
+	sound_event_js.AddMember("sound_origin", sound_origin_js, allocator);
 
 	rapidjson::Value sound_origins_js(rapidjson::kObjectType);
 
@@ -71,26 +78,27 @@ rapidjson::Value  EntRecEvent_t::ParseSoundEvent(rapidjson::MemoryPoolAllocator<
 
 rapidjson::Value  EntRecEvent_t::ParseEventByType(rapidjson::MemoryPoolAllocator<> &allocator)
 {
-	if (event_type == ENTREC_EVENT::ENT_CREATED)
+	if (event_type == static_cast<int>(ENTREC_EVENT::ENT_CREATED))
 		return ParseEntEvent(allocator);
 
-	if (event_type == ENTREC_EVENT::ENT_BROKEN)
+	if (event_type == static_cast<int>(ENTREC_EVENT::ENT_BROKEN))
 		return ParseEntEvent(allocator);
 
-	if (event_type == ENTREC_EVENT::ENT_DELETED)
+	if (event_type == static_cast<int>(ENTREC_EVENT::ENT_DELETED))
 		return ParseEntEvent(allocator);
 
 
 
-	if (event_type == ENTREC_EVENT::EFFECT_CREATED)
+	if (event_type == static_cast<int>(ENTREC_EVENT::EFFECT_CREATED))
 		return ParseEffectEvent(allocator);
 
 
 
-	if (event_type == ENTREC_EVENT::SOUND_CREATED)
+	if (event_type == static_cast<int>(ENTREC_EVENT::SOUND_CREATED))
 		return ParseSoundEvent(allocator);
 
 
 	// if none of the above, default to ParseEntEvent
+	Msg("kleinworks_DEBUG: WARNING, COULD NOT FIND EVENT TYPE, DEFAULTING TO ParseEntEvent.\n");
 	return ParseEntEvent(allocator);
 }

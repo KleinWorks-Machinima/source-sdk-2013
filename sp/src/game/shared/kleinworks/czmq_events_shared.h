@@ -11,6 +11,8 @@
 
 #include "czmq_baseentity_shared.h"
 
+#include <list>
+
 
 const enum class ENTREC_EVENT : int
 {
@@ -28,7 +30,7 @@ const enum class ENTREC_EVENT : int
 
 struct EntRecEvent_t
 {
-	ENTREC_EVENT	event_type;
+	int				event_type;
 	int				ent_id;
 	CzmqBaseEntity* p_entity = nullptr;
 
@@ -36,7 +38,8 @@ struct EntRecEvent_t
 	int					  sound_pitch;
 	float				  sound_time;
 	char*			      sound_name;
-	CUtlVector< Vector >  sound_origins;
+	Vector				  sound_origin;
+	std::list<Vector>     sound_origins;
 
 
 	rapidjson::Value ParseEntEvent(   rapidjson::MemoryPoolAllocator<> &allocator);

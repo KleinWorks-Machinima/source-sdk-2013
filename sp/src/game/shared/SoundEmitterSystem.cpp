@@ -617,6 +617,7 @@ public:
 				ep.m_flVolume,
 				ep.m_nFlags,
 				ep.m_nPitch,
+				ep.m_pOrigin,
 				ep.m_flSoundTime,
 				ep.m_UtlVecSoundOrigin);
 			

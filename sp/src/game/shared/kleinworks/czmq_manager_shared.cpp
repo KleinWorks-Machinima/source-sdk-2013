@@ -534,17 +534,35 @@ CzmqManager g_CzmqManager = CzmqManager();
 
 
 
-void CzmqManager::OnSoundPlayed(int entindex, const char *soundname, soundlevel_t soundlevel, float flVolume, int iFlags, int iPitch, float soundtime, CUtlVector< Vector >& soundorigins)
+void CzmqManager::OnSoundPlayed(int entindex, const char *soundname, soundlevel_t soundlevel, float flVolume, int iFlags, int iPitch, const Vector *pOrigin, float soundtime, CUtlVector< Vector >& soundorigins)
 {
+	if (!g_CzmqManager.m_record_toggle)
+		return;
+
 	EntRecEvent_t soundEvent;
 
 	soundEvent.ent_id	  = entindex;
-	soundEvent.event_type = ENTREC_EVENT::SOUND_CREATED;
+	soundEvent.event_type = static_cast<int>(ENTREC_EVENT::SOUND_CREATED);
 
-	soundEvent.sound_volume  = flVolume;
-	soundEvent.sound_pitch   = iPitch;
-	soundEvent.sound_time    = soundtime;
-	soundEvent.sound_origins = soundorigins;
+	Msg("kleinworks_DEBUG: OnSoundPlayed triggered, sound name = [%s] with type number = [%d].\n", soundname, soundEvent.event_type);
+
+	soundEvent.sound_volume   = flVolume;
+	soundEvent.sound_pitch    = iPitch;
+	soundEvent.sound_time     = soundtime;
+
+	if (pOrigin != nullptr) {
+		soundEvent.sound_origin.x = pOrigin->x;
+		soundEvent.sound_origin.y = pOrigin->y;
+		soundEvent.sound_origin.z = pOrigin->z;
+	}
+	else {
+		soundEvent.sound_origin.x = 0;
+		soundEvent.sound_origin.y = 0;
+		soundEvent.sound_origin.z = 0;
+	}
+
+	for (auto& vec : soundorigins)
+		soundEvent.sound_origins.push_back(vec);
 
 	soundEvent.sound_name	 = new char[strlen(soundname) + 1];
 	strcpy_s(soundEvent.sound_name, strlen(soundname) + 1, soundname);
