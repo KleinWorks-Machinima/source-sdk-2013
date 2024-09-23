@@ -30,6 +30,14 @@ extern ConVar breakable_multiplayer;
 ConVar cl_burninggibs( "cl_burninggibs", "0", 0, "A burning player that gibs has burning gibs." );
 #endif // GAME_DLL
 
+/*========================*/
+/*| KLEINWORKS™ ADDITION |*/
+
+void	OnEntityGibbed(CBaseHandle hParentEntity, CBaseHandle hGib);
+
+/*| KLEINWORKS™ ADDITION |*/
+/*========================*/
+
 extern bool PropBreakableCapEdictsOnCreateAll(int modelindex, IPhysicsObject *pPhysics, const breakablepropparams_t &params, CBaseEntity *pEntity, int iPrecomputedBreakableCount = -1 );
 extern CBaseEntity *BreakModelCreateSingle( CBaseEntity *pOwner, breakmodel_t *pModel, const Vector &position, 
 	const QAngle &angles, const Vector &velocity, const AngularImpulse &angVelocity, int nSkin, const breakablepropparams_t &params );
@@ -1117,6 +1125,14 @@ void PropBreakableCreateAll( int modelindex, IPhysicsObject *pPhysics, const bre
 						pPhysicsObject->EnableMotion( false );
 					}
 				}
+
+				/*========================*/
+				/*| KLEINWORKS™ ADDITION |*/
+
+				OnEntityGibbed(pOwnerEntity->GetRefEHandle(), pBreakable->GetRefEHandle());
+
+				/*| KLEINWORKS™ ADDITION |*/
+				/*========================*/
 			}
 		}
 	}

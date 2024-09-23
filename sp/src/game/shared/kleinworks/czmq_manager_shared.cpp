@@ -318,7 +318,7 @@ void CzmqManager::RemoveEntityFromSelection(CzmqBaseEntity* pEntity)
 
 	for (auto it = m_pSelected_EntitiesList.begin(); it != m_pSelected_EntitiesList.end(); it++) {
 
-		if (strcmp(pEntity->m_ent_name, it->get()->m_ent_name) != 0)
+		if (pEntity->m_ent_id != it->get()->m_ent_id)
 			continue;
 
 
@@ -530,11 +530,47 @@ CzmqBaseEntity*	CzmqManager::CreateCzmqEntity(CBaseHandle hEntity)
 
 CzmqManager g_C_zmqManager = CzmqManager();
 
+#define g_zmqManager g_C_zmqManager
+
+void RecordedEntityRagdolled(CBaseHandle hParentEntity, CBaseHandle hParentRagdoll)
+{
+	int serialNumber = hParentEntity.GetSerialNumber();
+	Msg("RecordedEntityRagdolled Called.\n");
+
+	for (auto it = g_C_zmqManager.m_pSelected_EntitiesList.begin(); it != g_C_zmqManager.m_pSelected_EntitiesList.end(); it++) {
+
+		if (it->get()->m_ent_id != serialNumber)
+			continue;
+
+		CzmqBaseSkeletal* pEnt = reinterpret_cast<CzmqBaseSkeletal*>(it->get());
+
+		pEnt->OnParentRagdolled(hParentRagdoll);
+
+		return;
+	}
+}
+
 #else
 
 CzmqManager g_CzmqManager = CzmqManager();
 
+#define g_zmqManager g_CzmqManager
+
+
 #endif // CLIENT_DLL
+
+void OnEntityGibbed(CBaseHandle hParentEntity, CBaseHandle hGib)
+{
+	for (auto it = g_zmqManager.m_pSelected_EntitiesList.begin(); it != g_zmqManager.m_pSelected_EntitiesList.end(); it++) {
+
+		if (it->get()->mh_parent_entity != hParentEntity)
+			continue;
+
+		g_zmqManager.AddEntityToSelection(hGib);
+
+		return;
+	}
+}
 
 
 
