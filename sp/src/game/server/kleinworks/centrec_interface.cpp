@@ -9,86 +9,9 @@
 //===================| PROPERTY OF THE KLEINWORKS™ CORPORTATION®® |===================\\
 
 #include "cbase.h"
-#include "kleinworks/czmq_manager_shared.h"
-#include <networkvar.h>
+#include "centrec_interface.h"
 
 
-
-class CEntRec_Interface : public CBaseEntity
-{
-public:
-	DECLARE_CLASS(CEntRec_Interface, CBaseEntity);
-	DECLARE_SERVERCLASS();
-
-
-	DECLARE_DATADESC();
-
-	CEntRec_Interface();
-	
-	/*======Member-Variables======*/
-	
-	//CNetworkVar(int, m_RecordRate);
-	CNetworkVar(bool, m_isRecording);
-	CNetworkVar(bool, m_isReceivingInput);
-
-	
-	CNetworkVar(int, m_start_record_tick);
-	CNetworkVar(int, m_end_record_tick);
-
-	int			m_last_tick;
-
-
-	/*======Member-Functions======*/
-public:
-
-	int UpdateTransmitState()
-	{
-		return SetTransmitState(FL_EDICT_ALWAYS);
-	}
-
-
-	void StartRecording(inputdata_t &inputData);
-	void StopRecording(inputdata_t &inputData);
-
-	void AddEntToRecording(inputdata_t &inputData);
-
-	void Think() override;
-
-	void UpdateNetworkedVars();
-
-	void CzmqOnTick();
-
-};
-
-extern CzmqManager g_CzmqManager;
-
-
-
-LINK_ENTITY_TO_CLASS(entrec_interface, CEntRec_Interface);
-
-
-
-//==========\\
-//-DATADESC-\\
-//==========\\
-
-BEGIN_DATADESC(CEntRec_Interface)
-	DEFINE_INPUTFUNC(FIELD_VOID, "StartRecording", StartRecording),
-	DEFINE_INPUTFUNC(FIELD_VOID, "StopRecording", StopRecording),
-	DEFINE_INPUTFUNC(FIELD_EHANDLE, "AddEntToRecording", AddEntToRecording),
-END_DATADESC();
-
-
-//============\\
-//-DATA-TABLE-\\
-//============\\
-
-IMPLEMENT_SERVERCLASS_ST(CEntRec_Interface, DT_EntRec_Interface)
-	SendPropBool(SENDINFO(m_isRecording)),
-	SendPropBool(SENDINFO(m_isReceivingInput)),
-	SendPropInt(SENDINFO(m_start_record_tick)),
-	SendPropInt(SENDINFO(m_end_record_tick)),
-END_SEND_TABLE()
 
 
 
@@ -103,6 +26,35 @@ CEntRec_Interface::CEntRec_Interface()
 }
 
 
+
+LINK_ENTITY_TO_CLASS(entrec_interface, CEntRec_Interface);
+
+
+
+//==========\\
+//-DATADESC-\\
+//==========\\
+
+BEGIN_DATADESC(CEntRec_Interface)
+DEFINE_INPUTFUNC(FIELD_VOID, "StartRecording", StartRecording),
+DEFINE_INPUTFUNC(FIELD_VOID, "StopRecording", StopRecording),
+DEFINE_INPUTFUNC(FIELD_EHANDLE, "AddEntToRecording", AddEntToRecording),
+END_DATADESC();
+
+
+//============\\
+//-DATA-TABLE-\\
+//============\\
+
+IMPLEMENT_SERVERCLASS_ST(CEntRec_Interface, DT_EntRec_Interface)
+SendPropBool(SENDINFO(m_isRecording)),
+SendPropBool(SENDINFO(m_isReceivingInput)),
+SendPropInt(SENDINFO(m_start_record_tick)),
+SendPropInt(SENDINFO(m_end_record_tick)),
+END_SEND_TABLE()
+
+
+extern CzmqManager g_CzmqManager;
 
 
 void CEntRec_Interface::StartRecording(inputdata_t &inputData)

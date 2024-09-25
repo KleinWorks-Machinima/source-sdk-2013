@@ -29,6 +29,7 @@ HL2 client/server game specific stuff
 
 
 #include "kleinworks/czmq_manager_shared.h"
+#include "kleinworks/centrec_interface.h"
 #include "kleinworks_cvars.h"
 
 
@@ -66,6 +67,22 @@ void ClientPutInServer(edict_t *pEdict, const char *playername)
 	// Allocate a CBasePlayer for pev, and call spawn
 	CHL2_Player *pPlayer = CHL2_Player::CreatePlayer("player", pEdict);
 	pPlayer->SetPlayerName(playername);
+
+	/*========================*/
+	/*| KLEINWORKS™ ADDITION |*/
+
+	// if there isnt an EntRecInterface entity, create one
+	CBaseEntity* pEntRecInterface = gEntList.FindEntityByClassname(gEntList.FirstEnt(), "entrec_interface");
+
+	if (pEntRecInterface == nullptr) {
+		Warning("kleinworks_WARNING: No entrec_interface entity was found, creating one now...\n");
+		CEntRec_Interface* entrecManager = new CEntRec_Interface();
+
+		entrecManager->Spawn();
+	}
+
+	/*| KLEINWORKS™ ADDITION |*/
+	/*========================*/
 }
 
 

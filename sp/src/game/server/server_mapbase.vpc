@@ -136,14 +136,13 @@ $Project
 				$File "$SRCDIR\game\shared\kleinworks\ZMQ\srcIPCMessages.h"
 				$File "$SRCDIR\game\shared\kleinworks\ZMQ\SourceIPC.h"
 			}
+
 			$File	"kleinworks\kleinworks_client.cpp" [$HL2]
-			$File	"$SRCDIR\game\shared\kleinworks\czmq_baseentity_shared.cpp"
-			$File	"$SRCDIR\game\shared\kleinworks\czmq_pointcamera_shared.cpp"
-			$File	"$SRCDIR\game\shared\kleinworks\czmq_baseskeletal_shared.cpp"
 			$File	"kleinworks\centrec_interface.cpp"
 			$File	"kleinworks\weapon_ent_selector.cpp"
 
 			$File	"kleinworks\kleinworks_cvars.h"
+			$File	"kleinworks\centrec_interface.h"
 
 
 			$File	"$SRCDIR\game\shared\kleinworks\czmq_baseentity_shared.h"
