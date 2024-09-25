@@ -23,16 +23,8 @@
 
 #ifdef CLIENT_DLL
 
-#include "../client/c_baseentity.h"
-#include "../client/cliententitylist.h"
-
 #define IEntityListener IClientEntityListener
 #define CPointCamera    C_PointCamera
-
-#else
-
-#include "../server/baseentity.h"
-#include "../server/entityapi.h"
 
 #endif // CLIENT_DLL
 
@@ -70,6 +62,8 @@ public:
 	int			   m_ent_numbones;
 	const char*    m_ent_name;
 	const char*    m_ent_model;
+	bool		   mb_is_gib;
+
 
 
 	/*==========Events============*/
@@ -95,7 +89,7 @@ public:
 
 private:
 
-	void OnEntityDeleted( CBaseEntity *pEntity ) override
+	virtual void OnEntityDeleted( CBaseEntity *pEntity ) override
 	{
 #ifdef CLIENT_DLL
 		if (pEntity->GetEntityIndex() != cl_entitylist->GetBaseEntityFromHandle(mh_parent_entity)->GetEntityIndex())
@@ -110,7 +104,6 @@ private:
 		OnParentEntityDestroyed(this);
 
 		delete this;
-	}
-
+}
 
 };

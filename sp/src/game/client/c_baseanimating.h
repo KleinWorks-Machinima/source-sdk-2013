@@ -48,6 +48,13 @@ class CBoneList;
 class KeyValues;
 class CJiggleBones;
 class IBoneSetup;
+/*========================*/
+/*| KLEINWORKS™ ADDITION |*/
+
+void RecordedEntityRagdolled(CBaseHandle hParentEntity, CBaseHandle hParentRagdoll);
+
+/*| KLEINWORKS™ ADDITION |*/
+/*========================*/
 FORWARD_DECLARE_HANDLE( memhandle_t );
 typedef unsigned short MDLHandle_t;
 
@@ -530,6 +537,15 @@ private:
 	void							RemoveBaseAnimatingInterpolatedVars();
 
 public:
+	/*========================*/
+	/*| KLEINWORKS™ ADDITION |*/
+
+	// used for hooking BecomeRagdoll functions.
+	bool							m_bEntRecIsRecording;
+
+	/*| KLEINWORKS™ ADDITION |*/
+	/*========================*/
+
 	CRagdoll						*m_pRagdoll;
 	C_BaseAnimating					*m_pClientsideRagdoll;	// From Alien Swarm SDK
 #ifdef MAPBASE

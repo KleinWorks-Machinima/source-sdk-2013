@@ -11,6 +11,9 @@
 
 #include "mathlib/mathlib.h"
 
+// memdbgon must be the last include file in a .cpp file!!!
+#include "tier0/memdbgon.h"
+
 
 
 
@@ -50,6 +53,7 @@ CzmqBaseEntity::CzmqBaseEntity(CBaseHandle hEntity)
 	m_ent_type		 = int(ENTREC_TYPES::BASE_ENTITY);
 	m_ent_id		 = hEntity.GetSerialNumber();
 	m_ent_numbones	 = 0;
+	mb_is_gib		 = false;
 
 
 	DevMsg(3, "kleinworks_DEBUG: Entity of class %s initialized.\n", pEntity->GetClassname());
@@ -151,9 +155,10 @@ rapidjson::Value CzmqBaseEntity::GetEntityMetaData(rapidjson::MemoryPoolAllocato
 bool CzmqBaseEntity::IsValid()
 {
 	if (!mh_parent_entity.IsValid())
-	{
 		return false;
-	}
+
+	if (mh_parent_entity.Get() == nullptr)
+		return false;
 
 #ifdef CLIENT_DLL
 	CBaseEntity* pEntity = cl_entitylist->GetBaseEntityFromHandle(mh_parent_entity);
@@ -162,9 +167,7 @@ bool CzmqBaseEntity::IsValid()
 #endif // CLIENT_DLL
 
 	if (pEntity == nullptr)
-	{
 		return false;
-	}
 	
 	return true;
 }

@@ -105,3 +105,13 @@ private:
 	CzmqBaseEntity*		 CreateCzmqEntity(CBaseHandle hEntity);
 
 };
+
+
+#ifdef CLIENT_DLL
+
+void	RecordedEntityRagdolled(CBaseHandle hParentEntity, CBaseHandle hParentRagdoll);
+
+#endif // CLIENT_DLL
+
+
+void	OnEntityGibbed(CBaseHandle hParentEntity, CBaseHandle hGib);

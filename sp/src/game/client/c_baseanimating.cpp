@@ -5109,6 +5109,14 @@ C_BaseAnimating *C_BaseAnimating::BecomeRagdollOnClient()
 		g_Hook_OnClientRagdoll.Call( m_ScriptScope, NULL, args );
 	}
 #endif
+	/*========================*/
+	/*| KLEINWORKS™ ADDITION |*/
+
+	if (m_bEntRecIsRecording != false)
+		RecordedEntityRagdolled(GetRefEHandle(), m_pClientsideRagdoll->GetRefEHandle());
+
+	/*| KLEINWORKS™ ADDITION |*/
+	/*========================*/
 
 	return m_pClientsideRagdoll;
 }

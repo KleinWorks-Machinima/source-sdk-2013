@@ -22,10 +22,14 @@
 
 
 
+
+
 CzmqBaseSkeletal::CzmqBaseSkeletal(CBaseHandle hEntity)
 {
 #ifdef CLIENT_DLL
 	CBaseAnimating* pSkelEntity = cl_entitylist->GetBaseEntityFromHandle(hEntity)->GetBaseAnimating();
+
+	pSkelEntity->m_bEntRecIsRecording = true;
 
 	cl_entitylist->AddListenerEntity(this);
 #else
@@ -59,7 +63,7 @@ CzmqBaseSkeletal::CzmqBaseSkeletal(CBaseHandle hEntity)
 	// for some reason, the last bone shouldnt be accessable
 	// (theres an assert that fails if you try to get it)
 	m_ent_numbones = pEntModel->numbones() - 1;
-
+	/*
 	for (int i = 0; i != m_ent_numbones + 1; i++) {
 
 		char*		boneName	  = new char[strlen(pEntModel->pBone(i)->pszName()) + 1];
@@ -69,11 +73,12 @@ CzmqBaseSkeletal::CzmqBaseSkeletal(CBaseHandle hEntity)
 
 		constBoneName = boneName;
 		
-		mch_bonenames_list.emplace_back(boneName);
+		int index = mch_bonenames_list.AddToTail();
+		mch_bonenames_list[index] = boneName;
 	}
-
+	*/
 	
-
+	mb_is_ragdoll = false;
 
 	DevMsg(3, "KleinWorks: Entity of class %s initialized.\n", pSkelEntity->GetClassname());
 
@@ -88,6 +93,17 @@ CzmqBaseSkeletal::~CzmqBaseSkeletal()
 
 
 
+void CzmqBaseSkeletal::OnParentRagdolled(CBaseHandle pParentRagdoll)
+{
+	mh_parent_entity = pParentRagdoll;
+
+
+	mb_is_ragdoll = true;
+	mb_is_npc	  = false;
+}
+
+
+
 
 rapidjson::Value CzmqBaseSkeletal::GetEntityData(rapidjson::MemoryPoolAllocator<> &allocator)
 {
@@ -97,6 +113,7 @@ rapidjson::Value CzmqBaseSkeletal::GetEntityData(rapidjson::MemoryPoolAllocator<
 #else
 	CBaseAnimating* pSkelEntity = gEntList.GetBaseEntity(mh_parent_entity)->GetBaseAnimating();
 #endif // CLIENT_DLL
+
 
 	CStudioHdr*     pModelPtr   = pSkelEntity->GetModelPtr();
 
@@ -169,17 +186,17 @@ rapidjson::Value CzmqBaseSkeletal::GetEntityMetaData(rapidjson::MemoryPoolAlloca
 	entMetaData_js.AddMember("ent_type",	 m_ent_type, allocator);
 	entMetaData_js.AddMember("ent_name",	 rapidjson::StringRef(m_ent_name), allocator);
 	entMetaData_js.AddMember("ent_model",    rapidjson::StringRef(m_ent_model), allocator);
-
+	/*
 	rapidjson::Value boneData_js = rapidjson::Value(rapidjson::kArrayType);
-
+	
 	for (int i = 0; i != m_ent_numbones + 1; i++) {
 		rapidjson::Value bone_js = rapidjson::Value(rapidjson::kObjectType);
 		bone_js.AddMember("name", rapidjson::StringRef(mch_bonenames_list[i]), allocator);
 
 		boneData_js.PushBack(bone_js, allocator);
 	}
-
+	
 	entMetaData_js.AddMember("ent_bones", boneData_js, allocator);
-
+	*/
 	return entMetaData_js;
 }
