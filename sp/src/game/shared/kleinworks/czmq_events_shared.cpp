@@ -18,7 +18,8 @@ rapidjson::Value  EntRecEvent_t::ParseEntEvent(rapidjson::MemoryPoolAllocator<> 
 	rapidjson::Value ent_event_js(rapidjson::kObjectType);
 
 	ent_event_js.AddMember("event_type", event_type, allocator);
-	ent_event_js.AddMember("ent_id", ent_id, allocator);
+	ent_event_js.AddMember("ent_id",     ent_id, allocator);
+	ent_event_js.AddMember("tick_count", tick_count, allocator);
 	if (p_entity != nullptr)
 		ent_event_js.AddMember("ent_metadata", p_entity->GetEntityMetaData(allocator), allocator);
 
@@ -41,7 +42,8 @@ rapidjson::Value  EntRecEvent_t::ParseSoundEvent(rapidjson::MemoryPoolAllocator<
 	rapidjson::Value sound_event_js(rapidjson::kObjectType);
 
 	sound_event_js.AddMember("event_type", event_type, allocator);
-	sound_event_js.AddMember("ent_id", ent_id, allocator);
+	sound_event_js.AddMember("ent_id",	   ent_id, allocator);
+	sound_event_js.AddMember("tick_count", tick_count, allocator);
 
 	sound_event_js.AddMember("sound_name", rapidjson::StringRef(sound_name), allocator);
 	sound_event_js.AddMember("sound_volume", sound_volume, allocator);
@@ -102,4 +104,33 @@ rapidjson::Value  EntRecEvent_t::ParseEventByType(rapidjson::MemoryPoolAllocator
 	// if none of the above, default to ParseEntEvent
 	Msg("kleinworks_DEBUG: WARNING, COULD NOT FIND EVENT TYPE, DEFAULTING TO ParseEntEvent.\n");
 	return ParseEntEvent(allocator);
+}
+
+
+
+
+EntRecEvent_t EntRecEvent_t::CreateEntCreatedEvent(CzmqBaseEntity* pCreatedEnt, int tickCount)
+{
+	EntRecEvent_t entEvent = EntRecEvent_t();
+
+	entEvent.p_entity   = pCreatedEnt;
+	entEvent.ent_id     = pCreatedEnt->m_ent_id;
+	entEvent.tick_count = tickCount;
+	entEvent.event_type = static_cast<int>(ENTREC_EVENT::ENT_CREATED);
+
+	return entEvent;
+}
+
+
+
+
+EntRecEvent_t EntRecEvent_t::CreateEntDeletedEvent(CzmqBaseEntity* pDeletedEnt, int tickCount)
+{
+	EntRecEvent_t entEvent = EntRecEvent_t();
+
+	entEvent.ent_id     = pDeletedEnt->m_ent_id;
+	entEvent.tick_count = tickCount;
+	entEvent.event_type = static_cast<int>(ENTREC_EVENT::ENT_DELETED);
+
+	return entEvent;
 }

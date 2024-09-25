@@ -32,6 +32,7 @@ struct EntRecEvent_t
 {
 	int				event_type;
 	int				ent_id;
+	int				tick_count;
 	CzmqBaseEntity* p_entity = nullptr;
 
 	int					  sound_volume;
@@ -42,6 +43,9 @@ struct EntRecEvent_t
 	Vector				  sound_origin;
 	std::list<Vector>     sound_origins;
 
+
+	static EntRecEvent_t CreateEntCreatedEvent(CzmqBaseEntity* pCreatedEnt, int tickCount);
+	static EntRecEvent_t CreateEntDeletedEvent(CzmqBaseEntity* pDeletedEnt, int tickCount);
 
 	rapidjson::Value ParseEntEvent(   rapidjson::MemoryPoolAllocator<> &allocator);
 	rapidjson::Value ParseSoundEvent( rapidjson::MemoryPoolAllocator<> &allocator);

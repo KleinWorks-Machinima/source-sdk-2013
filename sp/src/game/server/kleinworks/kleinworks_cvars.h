@@ -87,15 +87,26 @@ ConVar cvar_kleinworks_record(
 );
 
 ConVar cvar_kleinworks_record_delay_factor(
-	/*pName*/	"kw_entrec_record_delay_factor",
+			/*pName*/	"kw_entrec_record_delay_factor",
 	/*pDefaultValue*/	"5",
-	/*flags*/	FCVAR_REPLICATED,
-	/*pHelpString*/	"For synchronizing the Server and Client when a recording starts/ends, EntRec delays starting or ending a recording by x number of ticks.",
-	/*bMin*/	true,
-	/*fMin*/	0,
-	/*bMax*/	false,
-	/*fMax*/	0
-	);
+			/*flags*/	FCVAR_REPLICATED,
+	  /*pHelpString*/	"For synchronizing the Server and Client when a recording starts/ends, EntRec delays starting or ending a recording by x number of ticks.",
+			 /*bMin*/	true,
+			 /*fMin*/	0,
+			 /*bMax*/	false,
+			 /*fMax*/	0
+);
+
+ConVar cvar_kleinworks_record_sounds(
+			/*pName*/	"kw_entrec_record_sounds",
+	/*pDefaultValue*/	"0",
+			/*flags*/	FCVAR_REPLICATED,
+	  /*pHelpString*/	"If set to 1, EntRec will record any sound entities that are created during a recording.",
+			 /*bMin*/	true,
+			 /*fMin*/	0,
+			 /*bMax*/	true,
+			 /*fMax*/	1
+);
 
 
 

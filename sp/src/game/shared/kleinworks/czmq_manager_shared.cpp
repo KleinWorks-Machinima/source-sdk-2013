@@ -153,6 +153,8 @@ void CzmqManager::SetRecording(bool recordBool)
 		if (m_zmq_comms.m_isSendingOutput != true)
 			return;
 		m_zmq_comms.m_isDoneTransfering = true;
+
+		m_ent_events.clear();
 	}
 }
 
@@ -303,7 +305,8 @@ void CzmqManager::AddEntityToSelection(CBaseHandle hEntity)
 
 	__hook(&CzmqBaseEntity::OnParentEntityDestroyed, zmqEntity, &CzmqManager::HandleSelectedEntityDestroyed);
 
-
+	if (m_record_toggle)
+		m_ent_events.push_back(EntRecEvent_t::CreateEntCreatedEvent(zmqEntity, gpGlobals->tickcount));
 
 }
 
@@ -321,6 +324,9 @@ void CzmqManager::RemoveEntityFromSelection(CzmqBaseEntity* pEntity)
 
 
 		Msg(kleinworks_msg_header  ": Removed entity [%s] from EntRec selection.\n", pEntity->m_ent_name);
+
+		if (m_record_toggle)
+			m_ent_events.push_back(EntRecEvent_t::CreateEntDeletedEvent(pEntity, gpGlobals->tickcount));
 
 		__unhook(&CzmqBaseEntity::OnParentEntityDestroyed, pEntity, &CzmqManager::HandleSelectedEntityDestroyed);
 
@@ -348,6 +354,9 @@ void CzmqManager::RemoveEntityFromSelection(int serialNumber)
 
 
 		Msg(kleinworks_msg_header  ": Removed entity [%s] from EntRec selection.\n", pEntity->m_ent_name);
+
+		if (m_record_toggle)
+			m_ent_events.push_back(EntRecEvent_t::CreateEntDeletedEvent(pEntity, gpGlobals->tickcount));
 
 		__unhook(&CzmqBaseEntity::OnParentEntityDestroyed, pEntity, &CzmqManager::HandleSelectedEntityDestroyed);
 
@@ -389,6 +398,9 @@ void CzmqManager::ClearEntitySelection()
 		auto it = m_pSelected_EntitiesList.begin();
 
 		CzmqBaseEntity* pEnt = it->get();
+
+		if (m_record_toggle)
+			m_ent_events.push_back(EntRecEvent_t::CreateEntDeletedEvent(pEnt, gpGlobals->tickcount));
 
 
 		__unhook(&CzmqBaseEntity::OnParentEntityDestroyed, pEnt, &CzmqManager::HandleSelectedEntityDestroyed);
@@ -536,6 +548,9 @@ CzmqManager g_CzmqManager = CzmqManager();
 
 void CzmqManager::OnSoundPlayed(int entindex, const char *soundname, soundlevel_t soundlevel, float flVolume, int iFlags, int iPitch, const Vector *pOrigin, float soundtime, float* soundDuration, CUtlVector< Vector >& soundorigins)
 {
+	if (!cvar->FindVar("kw_entrec_record_sounds")->GetBool())
+		return;
+
 	if (!g_CzmqManager.m_record_toggle)
 		return;
 
@@ -543,13 +558,14 @@ void CzmqManager::OnSoundPlayed(int entindex, const char *soundname, soundlevel_
 
 	soundEvent.ent_id	  = entindex;
 	soundEvent.event_type = static_cast<int>(ENTREC_EVENT::SOUND_CREATED);
+	soundEvent.tick_count = gpGlobals->tickcount;
 
 
 	soundEvent.sound_volume   = flVolume;
 	soundEvent.sound_pitch    = iPitch;
 	soundEvent.sound_time     = soundtime;
 	if (soundDuration != nullptr)
-		soundEvent.sound_duration = *soundDuration;
+		soundEvent.sound_duration = TIME_TO_TICKS(*soundDuration);
 	else
 		soundEvent.sound_duration = -1;
 
