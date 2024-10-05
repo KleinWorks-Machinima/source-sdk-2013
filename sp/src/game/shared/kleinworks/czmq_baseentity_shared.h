@@ -10,17 +10,6 @@
 
 #include "cbase.h"
 
-#pragma warning(push)
-#pragma warning(disable: 4005)
-#pragma warning(disable: 4003)
-
-#include <rapidjson/document.h>
-#include <rapidjson/reader.h>
-#include <rapidjson/writer.h>
-#include <rapidjson/stringbuffer.h>
-
-#pragma warning(pop)
-
 #ifdef CLIENT_DLL
 
 #define IEntityListener IClientEntityListener
@@ -30,6 +19,25 @@
 
 
 #include "fmtstr.h"
+
+#pragma warning(push)
+#pragma warning(disable: 4348)
+
+namespace rapidjson {
+	class CrtAllocator;
+	template<typename BaseAllocator = typename CrtAllocator>
+	class MemoryPoolAllocator;
+
+	template <typename Encoding, typename Allocator = MemoryPoolAllocator<> >
+	class GenericValue;
+
+	template<typename CharType = char>
+	struct UTF8;
+
+	typedef GenericValue<UTF8<> > Value;
+}
+
+#pragma warning(pop)
 
 
 
@@ -75,16 +83,16 @@ public:
 	/*======Member-Functions======*/
 public:
 
-	virtual rapidjson::Value   GetEntityData(rapidjson::MemoryPoolAllocator<> &allocator);
-	virtual rapidjson::Value   GetEntityMetaData(rapidjson::MemoryPoolAllocator<> &allocator);
+	virtual rapidjson::Value	GetEntityData(rapidjson::MemoryPoolAllocator<> &allocator);
+	virtual rapidjson::Value	GetEntityMetaData(rapidjson::MemoryPoolAllocator<> &allocator);
 
-	bool			IsValid();
+	virtual bool				IsValid();
 
-	bool			operator ==(const CzmqBaseEntity&  other) const;
-	bool			operator ==(const CzmqBaseEntity*  other) const;
-	bool			operator ==(const CzmqBaseEntity   other) const;
-	//bool operator ==(const std::unique_ptr<CzmqBaseEntity> other) const;
-	bool			operator ==(const CBaseHandle      other) const;
+	bool						operator ==(const CzmqBaseEntity&  other) const;
+	bool						operator ==(const CzmqBaseEntity*  other) const;
+	bool						operator ==(const CzmqBaseEntity   other) const;
+	//bool						operator ==(const std::unique_ptr<CzmqBaseEntity> other) const;
+	bool						operator ==(const CBaseHandle      other) const;
 
 
 private:

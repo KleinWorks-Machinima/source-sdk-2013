@@ -63,6 +63,14 @@
 #include "c_baseobject.h"
 #endif
 
+/*========================*/
+/*| KLEINWORKS™ ADDITION |*/
+
+#include "kleinworks/czmq_baseskeletal_shared.h"
+
+/*| KLEINWORKS™ ADDITION |*/
+/*========================*/
+
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
@@ -5113,7 +5121,7 @@ C_BaseAnimating *C_BaseAnimating::BecomeRagdollOnClient()
 	/*| KLEINWORKS™ ADDITION |*/
 
 	if (m_bEntRecIsRecording != false)
-		RecordedEntityRagdolled(GetRefEHandle(), m_pClientsideRagdoll->GetRefEHandle());
+		m_pZmqObject->OnParentRagdolled(*m_pClientsideRagdoll->m_pRagdoll);
 
 	/*| KLEINWORKS™ ADDITION |*/
 	/*========================*/

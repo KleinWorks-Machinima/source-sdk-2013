@@ -7,9 +7,19 @@
 //===================| PROPERTY OF THE KLEINWORKS™ CORPORTATION®® |===================\\
 
 #include "cbase.h"
+
+#pragma warning(push)
+#pragma warning(disable: 4005)
+#pragma warning(disable: 4003)
+
+#include <rapidjson/document.h>
+#include <rapidjson/reader.h>
+#include <rapidjson/writer.h>
+#include <rapidjson/stringbuffer.h>
+
+#pragma warning(pop)
+
 #include "czmq_baseskeletal_shared.h"
-
-
 
 
 
@@ -30,6 +40,7 @@ CzmqBaseSkeletal::CzmqBaseSkeletal(CBaseHandle hEntity)
 	CBaseAnimating* pSkelEntity = cl_entitylist->GetBaseEntityFromHandle(hEntity)->GetBaseAnimating();
 
 	pSkelEntity->m_bEntRecIsRecording = true;
+	pSkelEntity->m_pZmqObject = this;
 
 	cl_entitylist->AddListenerEntity(this);
 #else
@@ -38,9 +49,12 @@ CzmqBaseSkeletal::CzmqBaseSkeletal(CBaseHandle hEntity)
 	gEntList.AddListenerEntity(this);
 #endif // CLIENT_DLL
 
-	// we have to do this to avoid taking a reference to GetDebugName() or GetModelName()
+	// grab the parent entity's model and store it
+	const model_t* pModel = modelinfo->GetModel(pSkelEntity->GetModelIndex());
+	mp_parent_model = new CStudioHdr(modelinfo->GetStudiomodel(pModel));
 
-	const char* modelname = modelinfo->GetModelName(pSkelEntity->GetModel());
+	// we have to do this to avoid taking a reference to GetDebugName() or GetModelName()
+	const char* modelname = mp_parent_model->pszName();
 
 	int ent_name_len = strlen(pSkelEntity->GetDebugName());
 	int ent_modelname_len = strlen(modelname);
@@ -51,18 +65,19 @@ CzmqBaseSkeletal::CzmqBaseSkeletal(CBaseHandle hEntity)
 	strcpy_s(ent_name_proxystr, ent_name_len + 1, pSkelEntity->GetDebugName());
 	strcpy_s(ent_modelname_proxystr, ent_modelname_len + 1, modelname);
 
-	CStudioHdr* pEntModel = pSkelEntity->GetModelPtr();
 
 	m_ent_name		 = ent_name_proxystr;
 	m_ent_model		 = ent_modelname_proxystr;
 	mh_parent_entity = hEntity;
 	m_ent_type		 = int(ENTREC_TYPES::BASE_SKELETAL);
 	m_ent_id		 = hEntity.GetSerialNumber();
+	mb_is_ragdoll	 = false;
+	mp_ragdoll		 = nullptr;
 
 
 	// for some reason, the last bone shouldnt be accessable
 	// (theres an assert that fails if you try to get it)
-	m_ent_numbones = pEntModel->numbones() - 1;
+	m_ent_numbones = mp_parent_model->numbones() - 1;
 	/*
 	for (int i = 0; i != m_ent_numbones + 1; i++) {
 
@@ -77,8 +92,6 @@ CzmqBaseSkeletal::CzmqBaseSkeletal(CBaseHandle hEntity)
 		mch_bonenames_list[index] = boneName;
 	}
 	*/
-	
-	mb_is_ragdoll = false;
 
 	DevMsg(3, "KleinWorks: Entity of class %s initialized.\n", pSkelEntity->GetClassname());
 
@@ -92,30 +105,53 @@ CzmqBaseSkeletal::~CzmqBaseSkeletal()
 
 
 
-
-void CzmqBaseSkeletal::OnParentRagdolled(CBaseHandle pParentRagdoll)
+void CzmqBaseSkeletal::OnParentRagdolled(CRagdoll &pParentRagdoll)
 {
-	mh_parent_entity = pParentRagdoll;
+#ifdef CLIENT_DLL
+	cl_entitylist->RemoveListenerEntity(this);
+#endif
 
+	mp_ragdoll = &pParentRagdoll;
 
 	mb_is_ragdoll = true;
 	mb_is_npc	  = false;
 }
 
 
+bool CzmqBaseSkeletal::IsValid()
+{
+	if (mb_is_ragdoll)
+		return true;
+
+	if (!mh_parent_entity.IsValid())
+		return false;
+
+	if (mh_parent_entity.Get() == nullptr)
+		return false;
+
+#ifdef CLIENT_DLL
+	CBaseEntity* pEntity = cl_entitylist->GetBaseEntityFromHandle(mh_parent_entity);
+#else
+	CBaseEntity* pEntity = gEntList.GetBaseEntity(mh_parent_entity);
+#endif // CLIENT_DLL
+
+	if (pEntity == nullptr)
+		return false;
+
+	return true;
+}
+
 
 
 rapidjson::Value CzmqBaseSkeletal::GetEntityData(rapidjson::MemoryPoolAllocator<> &allocator)
 {
-
+	CBaseAnimating* pSkelEntity;
 #ifdef CLIENT_DLL
-	CBaseAnimating* pSkelEntity = cl_entitylist->GetBaseEntityFromHandle(mh_parent_entity)->GetBaseAnimating();
+	if (mb_is_ragdoll != true)
+		pSkelEntity = cl_entitylist->GetBaseEntityFromHandle(mh_parent_entity)->GetBaseAnimating();
 #else
-	CBaseAnimating* pSkelEntity = gEntList.GetBaseEntity(mh_parent_entity)->GetBaseAnimating();
+	pSkelEntity = gEntList.GetBaseEntity(mh_parent_entity)->GetBaseAnimating();
 #endif // CLIENT_DLL
-
-
-	CStudioHdr*     pModelPtr   = pSkelEntity->GetModelPtr();
 
 	rapidjson::Value entData_js = rapidjson::Value(rapidjson::kObjectType);
 
@@ -132,9 +168,22 @@ rapidjson::Value CzmqBaseSkeletal::GetEntityData(rapidjson::MemoryPoolAllocator<
 
 		matrix3x4_t boneToWorld;
 
-		mstudiobone_t* boneSelf = pModelPtr->pBone(i);
+		mstudiobone_t* boneSelf = mp_parent_model->pBone(i);
+
+#ifdef CLIENT_DLL
+		if (mb_is_ragdoll == true) {
+
+			IPhysicsObject* pPhysBone = mp_ragdoll->GetElement(boneSelf->physicsbone);
+			if (pPhysBone == nullptr)
+				continue;
+
+			pPhysBone->GetPositionMatrix(&boneToWorld);
+		}
+#else
 
 		pSkelEntity->GetBoneTransform(i, boneToWorld);
+
+#endif // CLIENT_DLL
 
 
 		Vector     bonePosition;

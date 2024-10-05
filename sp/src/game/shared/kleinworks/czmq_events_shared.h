@@ -9,6 +9,17 @@
 
 #include "cbase.h"
 
+#pragma warning(push)
+#pragma warning(disable: 4005)
+#pragma warning(disable: 4003)
+
+#include <rapidjson/document.h>
+#include <rapidjson/reader.h>
+#include <rapidjson/writer.h>
+#include <rapidjson/stringbuffer.h>
+
+#pragma warning(pop)
+
 #include "czmq_baseentity_shared.h"
 
 #include <list>

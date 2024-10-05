@@ -10,7 +10,9 @@
 
 #include "czmq_baseentity_shared.h"
 
-
+#ifndef CLIENT_DLL
+class CRagdoll;
+#endif
 
 
 
@@ -26,8 +28,14 @@ public:
 
 	/*======Member-Variables======*/
 public:
-	bool	  mb_is_npc;
-	bool	  mb_is_ragdoll;
+	bool	   mb_is_npc;
+	bool	   mb_is_ragdoll;
+
+	CStudioHdr *mp_parent_model;
+
+
+	CRagdoll   *mp_ragdoll;
+
 
 
 
@@ -35,7 +43,11 @@ public:
 
 	/*======Member-Functions======*/
 
-	void			 OnParentRagdolled(CBaseHandle pParentRagdoll);
+
+	void			 OnParentRagdolled(CRagdoll &pParentRagdoll);
+
+
+	bool			 IsValid() override;
 
 
 	rapidjson::Value GetEntityData(rapidjson::MemoryPoolAllocator<> &allocator) override;

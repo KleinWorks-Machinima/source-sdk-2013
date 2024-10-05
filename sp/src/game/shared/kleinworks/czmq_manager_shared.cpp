@@ -30,7 +30,7 @@ CzmqManager::CzmqManager()
 	m_zmq_comms.m_drop_out_tolerance = -1;
 	m_zmq_comms.m_pollerTimeout      = 0;
 
-	DevMsg(3, kleinworks_msg_header ": CzmqManager instance initialized.\n");
+	DevMsg(3, "%s: CzmqManager instance initialized.\n", kleinworks_msg_header);
 
 }
 
@@ -64,7 +64,7 @@ void CzmqManager::OnTick()
 		// If we are currently recording, update entities
 		if (m_zmq_comms.m_isSendingOutput == true) {
 			if (m_zmq_comms.m_OUTPUT_tick_count == 1)
-				Msg(kleinworks_msg_header  ": Connection established! Recording started!\n");
+				Msg("%s: Connection established! Recording started!\n", kleinworks_msg_header);
 			UpdateSelectedEntities();
 		}
 
@@ -99,11 +99,11 @@ void CzmqManager::SetRecording(bool recordBool)
 	{
 
 		if (m_zmq_comms.m_isDoneTransfering != false) {
-			Warning("KleinWorks: ERROR! Previous recording hasn't finished, unable to start new recording! Wait a bit or reset sockets and try again.\n");
+			Warning("%s: ERROR! Previous recording hasn't finished, unable to start new recording! Wait a bit or reset sockets and try again.\n", kleinworks_msg_header);
 			m_record_toggle = false;
 			return;
 		}
-		Msg(kleinworks_msg_header  ": Attempting to start recording...\n");
+		Msg("%s: Attempting to start recording...\n", kleinworks_msg_header);
 
 
 		// updating the entity metadata before starting to record
@@ -114,7 +114,7 @@ void CzmqManager::SetRecording(bool recordBool)
 		metadata_js.Accept(writer);
 
 
-		DevMsg(3, kleinworks_msg_header  "_DEBUG: Metadata Message: %s\n", buffer.GetString());
+		DevMsg(3, "%s_DEBUG: Metadata Message: %s\n", kleinworks_msg_header, buffer.GetString());
 
 		const char* pEntMetaDataStr = buffer.GetString();
 
@@ -147,8 +147,8 @@ void CzmqManager::SetRecording(bool recordBool)
 		if (m_zmq_comms.m_isDoneTransfering != false)
 			return;
 
-		Msg(kleinworks_msg_header  ": Ending recording...\n");
-		Msg(kleinworks_msg_header  ": Recorded from %d to %d\n", 0, m_zmq_comms.m_OUTPUT_tick_count);
+		Msg("%s: Ending recording...\n", kleinworks_msg_header);
+		Msg("%s: Recorded from %d to %d\n", kleinworks_msg_header, 0, m_zmq_comms.m_OUTPUT_tick_count);
 
 		if (m_zmq_comms.m_isSendingOutput != true)
 			return;
@@ -202,12 +202,12 @@ void CzmqManager::UpdateSelectedEntities()
 
 		if (!element)
 		{ // if a selected entity doesnt exist, print an error message
-			Warning(kleinworks_msg_header, ": Something went wrong! At line %d in CzmqManager.cpp, element was a nullptr! Skipping this element!\n", __LINE__ - 3);
+			Warning("%s: Something went wrong! At line %d in CzmqManager.cpp, element was a nullptr! Skipping this element!\n", kleinworks_msg_header, __LINE__ - 3);
 			continue;
 		}
 		if (!element->IsValid())
 		{// if a selected czmq entity's parent entity isn't valid, report and remove it
-			DevMsg(4, kleinworks_msg_header, ": Recorded entity with name: [%s] ID: [%d] no longer valid. Destroying...\n", element->m_ent_name, element->m_ent_id);
+			DevMsg(4, "%s_DEBUG: Recorded entity with name: [%s] ID: [%d] no longer valid. Destroying...\n", kleinworks_msg_header, element->m_ent_name, element->m_ent_id);
 			RemoveEntityFromSelection(element);
 			continue;
 		}
@@ -251,7 +251,7 @@ void CzmqManager::UpdateSelectedEntities()
 void CzmqManager::AddEntityToSelection(CBaseHandle hEntity)
 {
 	if (!hEntity.IsValid()) {
-		Warning(kleinworks_msg_header, ": ERROR! Something tried to select an invalid entity for recording. Either the entity doesn't exist or it's a Hammer entity.\n");
+		Warning("%s: ERROR! Something tried to select an invalid entity for recording. Either the entity doesn't exist or it's a Hammer entity.\n", kleinworks_msg_header);
 		return;
 	}
 
@@ -261,7 +261,7 @@ void CzmqManager::AddEntityToSelection(CBaseHandle hEntity)
 	CBaseEntity* pEntity = gEntList.GetBaseEntity(hEntity);
 
 	if (pEntity->IsClient()) {
-		Warning(kleinworks_msg_header, ": ERROR! Server attempted to select Client-side only entity! Aborting...\n");
+		Warning("%s: ERROR! Server attempted to select Client-side only entity! Aborting...\n", kleinworks_msg_header);
 		return;
 	}
 
@@ -273,13 +273,13 @@ void CzmqManager::AddEntityToSelection(CBaseHandle hEntity)
 	for (auto& element : m_pSelected_EntitiesList)
 	{
 		if (*element.get() == hEntity) {
-			Msg(kleinworks_msg_header  ": Entity [%s] is already in EntRec selection!\n", pEntity->GetDebugName());
+			Msg("%s: Entity [%s] is already in EntRec selection!\n", kleinworks_msg_header, pEntity->GetDebugName());
 			return;
 		}
 	}
 	
 
-	Msg(kleinworks_msg_header  ": adding entity with name [%s] to EntRec selection...\n", pEntity->GetDebugName());
+	Msg("%s: adding entity with name [%s] to EntRec selection...\n", kleinworks_msg_header, pEntity->GetDebugName());
 
 	rapidjson::Value entMetaData_js;
 
@@ -323,7 +323,7 @@ void CzmqManager::RemoveEntityFromSelection(CzmqBaseEntity* pEntity)
 			continue;
 
 
-		Msg(kleinworks_msg_header  ": Removed entity [%s] from EntRec selection.\n", pEntity->m_ent_name);
+		Msg("%s: Removed entity [%s] from EntRec selection.\n", kleinworks_msg_header, pEntity->m_ent_name);
 
 		if (m_record_toggle)
 			m_ent_events.push_back(EntRecEvent_t::CreateEntDeletedEvent(pEntity, gpGlobals->tickcount));
@@ -353,7 +353,7 @@ void CzmqManager::RemoveEntityFromSelection(int serialNumber)
 		CzmqBaseEntity* pEntity = it->get();
 
 
-		Msg(kleinworks_msg_header  ": Removed entity [%s] from EntRec selection.\n", pEntity->m_ent_name);
+		Msg("%s: Removed entity [%s] from EntRec selection.\n", kleinworks_msg_header, pEntity->m_ent_name);
 
 		if (m_record_toggle)
 			m_ent_events.push_back(EntRecEvent_t::CreateEntDeletedEvent(pEntity, gpGlobals->tickcount));
@@ -374,7 +374,7 @@ void CzmqManager::RemoveEntityFromSelection(int serialNumber)
 
 void CzmqManager::HandleSelectedEntityDestroyed(CzmqBaseEntity* pCaller)
 {
-	DevMsg(4, kleinworks_msg_header  "_DEBUG: Destruction of entity [%s] detected! Removing entity from EntRec selection...\n", pCaller->m_ent_name);
+	DevMsg(4, "%s_DEBUG: Destruction of entity [%s] detected! Removing entity from EntRec selection...\n", kleinworks_msg_header, pCaller->m_ent_name);
 	__unhook(&CzmqBaseEntity::OnParentEntityDestroyed, pCaller, &CzmqManager::HandleSelectedEntityDestroyed);
 	RemoveEntityFromSelection(pCaller);
 	return;
@@ -386,14 +386,14 @@ void CzmqManager::HandleSelectedEntityDestroyed(CzmqBaseEntity* pCaller)
 
 void CzmqManager::ClearEntitySelection()
 {
-	DevMsg(4, kleinworks_msg_header  "_DEBUG: [%d]\n", int(m_pSelected_EntitiesList.size()));
+	DevMsg(4, "%s_DEBUG: [%d]\n", kleinworks_msg_header, int(m_pSelected_EntitiesList.size()));
 	
 
 	int size = int(m_pSelected_EntitiesList.size());
 
 	for (int i = 0; i != size; i++) {
 
-		DevMsg(4, kleinworks_msg_header  "_DEBUG: [%d]\n", i);
+		DevMsg(4, "%s_DEBUG: [%d]\n", kleinworks_msg_header, i);
 
 		auto it = m_pSelected_EntitiesList.begin();
 
@@ -541,24 +541,25 @@ CzmqBaseEntity*	CzmqManager::CreateCzmqEntity(CBaseHandle hEntity)
 CzmqManager g_C_zmqManager = CzmqManager();
 
 #define g_zmqManager g_C_zmqManager
-
+/*
 void RecordedEntityRagdolled(CBaseHandle hParentEntity, CBaseHandle hParentRagdoll)
 {
 	int serialNumber = hParentEntity.GetSerialNumber();
 	Msg("RecordedEntityRagdolled Called.\n");
 
-	for (auto it = g_C_zmqManager.m_pSelected_EntitiesList.begin(); it != g_C_zmqManager.m_pSelected_EntitiesList.end(); it++) {
+	for (auto& it : g_C_zmqManager.m_pSelected_EntitiesList) {
 
-		if (it->get()->m_ent_id != serialNumber)
+		if (it->m_ent_id != serialNumber)
 			continue;
 
-		CzmqBaseSkeletal* pEnt = reinterpret_cast<CzmqBaseSkeletal*>(it->get());
+		//CzmqBaseSkeletal* pEnt = dynamic_cast<CzmqBaseSkeletal*>(it->get());
 
-		pEnt->OnParentRagdolled(hParentRagdoll);
+		pSkel->OnParentRagdolled(hParentRagdoll);
 
 		return;
 	}
 }
+*/
 
 #else
 
@@ -590,7 +591,7 @@ void CzmqManager::OnSoundPlayed(int entindex, const char *soundname, soundlevel_
 	else
 		soundEvent.sound_duration = -1;
 
-	Msg("kleinworks_DEBUG: OnSoundPlayed triggered, sound name = [%s] with duration = [%d].\n", soundname, soundEvent.sound_duration);
+	Msg("%s_DEBUG: OnSoundPlayed triggered, sound name = [%s] with duration = [%d].\n", kleinworks_msg_header,  soundname, soundEvent.sound_duration);
 
 	if (pOrigin != nullptr) {
 		soundEvent.sound_origin.x = pOrigin->x;
