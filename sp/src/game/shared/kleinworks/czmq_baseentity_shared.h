@@ -112,6 +112,6 @@ private:
 		OnParentEntityDestroyed(this);
 
 		delete this;
-}
+	}
 
 };

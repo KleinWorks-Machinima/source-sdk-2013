@@ -20,7 +20,7 @@ class CRagdoll;
 class CzmqBaseSkeletal : public CzmqBaseEntity
 {
 public:
-	CzmqBaseSkeletal(CBaseHandle hEntity);
+	CzmqBaseSkeletal(CBaseHandle hEntity, bool isRagdoll = false);
 	~CzmqBaseSkeletal();
 
 
@@ -42,6 +42,27 @@ public:
 
 
 	/*======Member-Functions======*/
+
+
+	void OnEntityDeleted(CBaseEntity *pEntity) override
+	{
+		if (mb_is_ragdoll)
+			return;
+
+#ifdef CLIENT_DLL
+		if (pEntity->GetEntityIndex() != cl_entitylist->GetBaseEntityFromHandle(mh_parent_entity)->GetEntityIndex())
+			return;
+
+#else
+		if (pEntity->edict() != gEntList.GetEdict(mh_parent_entity))
+			return;
+
+#endif // CLIENT_DLL
+
+		OnParentEntityDestroyed(this);
+
+		delete this;
+	}
 
 
 	void			 OnParentRagdolled(CRagdoll &pParentRagdoll);

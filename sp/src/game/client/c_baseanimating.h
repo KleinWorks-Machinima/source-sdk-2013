@@ -51,8 +51,7 @@ class IBoneSetup;
 /*========================*/
 /*| KLEINWORKS™ ADDITION |*/
 
-class CzmqBaseSkeletal;
-//void RecordedEntityRagdolled(CBaseHandle hParentEntity, CBaseHandle hParentRagdoll);
+void RecordedEntityRagdolled(CBaseHandle hParentEntity, CBaseHandle hParentRagdoll);
 
 /*| KLEINWORKS™ ADDITION |*/
 /*========================*/
@@ -543,7 +542,6 @@ public:
 
 	// used for hooking BecomeRagdoll functions.
 	bool							m_bEntRecIsRecording;
-	CzmqBaseSkeletal				*m_pZmqObject;
 
 	/*| KLEINWORKS™ ADDITION |*/
 	/*========================*/

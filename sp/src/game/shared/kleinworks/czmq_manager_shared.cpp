@@ -474,7 +474,7 @@ CzmqBaseEntity*	CzmqManager::CreateCzmqEntity(CBaseHandle hEntity)
 		className = className.substr(6);
 	}
 
-	
+
 	/*| Base Entities |*/
 	if (className.substr(0, 5) == "item_") {
 		zmqEntity = new CzmqBaseEntity(hEntity);
@@ -497,8 +497,9 @@ CzmqBaseEntity*	CzmqManager::CreateCzmqEntity(CBaseHandle hEntity)
 		return zmqEntity;
 	}
 
-	if (className == "physics_prop_ragdoll") {
-		zmqEntity = new CzmqBaseSkeletal(hEntity);
+	if (className.find("ragdoll") != std::string::npos || className.find("Ragdoll") != std::string::npos) {
+		zmqEntity = new CzmqBaseSkeletal(hEntity, true);
+
 
 		return zmqEntity;
 	}
@@ -541,25 +542,17 @@ CzmqBaseEntity*	CzmqManager::CreateCzmqEntity(CBaseHandle hEntity)
 CzmqManager g_C_zmqManager = CzmqManager();
 
 #define g_zmqManager g_C_zmqManager
-/*
+
 void RecordedEntityRagdolled(CBaseHandle hParentEntity, CBaseHandle hParentRagdoll)
 {
 	int serialNumber = hParentEntity.GetSerialNumber();
 	Msg("RecordedEntityRagdolled Called.\n");
 
-	for (auto& it : g_C_zmqManager.m_pSelected_EntitiesList) {
+	g_zmqManager.RemoveEntityFromSelection(serialNumber);
 
-		if (it->m_ent_id != serialNumber)
-			continue;
-
-		//CzmqBaseSkeletal* pEnt = dynamic_cast<CzmqBaseSkeletal*>(it->get());
-
-		pSkel->OnParentRagdolled(hParentRagdoll);
-
-		return;
-	}
+	g_zmqManager.AddEntityToSelection(hParentRagdoll);
 }
-*/
+
 
 #else
 

@@ -34,19 +34,31 @@
 
 
 
-CzmqBaseSkeletal::CzmqBaseSkeletal(CBaseHandle hEntity)
+CzmqBaseSkeletal::CzmqBaseSkeletal(CBaseHandle hEntity, bool isRagdoll)
 {
 #ifdef CLIENT_DLL
 	CBaseAnimating* pSkelEntity = cl_entitylist->GetBaseEntityFromHandle(hEntity)->GetBaseAnimating();
 
 	pSkelEntity->m_bEntRecIsRecording = true;
-	pSkelEntity->m_pZmqObject = this;
+
+	if (isRagdoll == true) {
+
+		mb_is_ragdoll = true;
+		mp_ragdoll    = pSkelEntity->m_pRagdoll;
+	}
+	else {
+		mb_is_ragdoll = false;
+		mp_ragdoll = nullptr;
+	}
 
 	cl_entitylist->AddListenerEntity(this);
 #else
 	CBaseAnimating* pSkelEntity = gEntList.GetBaseEntity(hEntity)->GetBaseAnimating();
 
 	gEntList.AddListenerEntity(this);
+
+	mb_is_ragdoll = false;
+	mp_ragdoll    = nullptr;
 #endif // CLIENT_DLL
 
 	// grab the parent entity's model and store it
@@ -54,7 +66,7 @@ CzmqBaseSkeletal::CzmqBaseSkeletal(CBaseHandle hEntity)
 	mp_parent_model = new CStudioHdr(modelinfo->GetStudiomodel(pModel));
 
 	// we have to do this to avoid taking a reference to GetDebugName() or GetModelName()
-	const char* modelname = mp_parent_model->pszName();
+	const char* modelname = modelinfo->GetModelName(pModel);
 
 	int ent_name_len = strlen(pSkelEntity->GetDebugName());
 	int ent_modelname_len = strlen(modelname);
@@ -71,8 +83,6 @@ CzmqBaseSkeletal::CzmqBaseSkeletal(CBaseHandle hEntity)
 	mh_parent_entity = hEntity;
 	m_ent_type		 = int(ENTREC_TYPES::BASE_SKELETAL);
 	m_ent_id		 = hEntity.GetSerialNumber();
-	mb_is_ragdoll	 = false;
-	mp_ragdoll		 = nullptr;
 
 
 	// for some reason, the last bone shouldnt be accessable
@@ -105,17 +115,6 @@ CzmqBaseSkeletal::~CzmqBaseSkeletal()
 
 
 
-void CzmqBaseSkeletal::OnParentRagdolled(CRagdoll &pParentRagdoll)
-{
-#ifdef CLIENT_DLL
-	cl_entitylist->RemoveListenerEntity(this);
-#endif
-
-	mp_ragdoll = &pParentRagdoll;
-
-	mb_is_ragdoll = true;
-	mb_is_npc	  = false;
-}
 
 
 bool CzmqBaseSkeletal::IsValid()
@@ -145,7 +144,7 @@ bool CzmqBaseSkeletal::IsValid()
 
 rapidjson::Value CzmqBaseSkeletal::GetEntityData(rapidjson::MemoryPoolAllocator<> &allocator)
 {
-	CBaseAnimating* pSkelEntity;
+	CBaseAnimating* pSkelEntity = nullptr;
 #ifdef CLIENT_DLL
 	if (mb_is_ragdoll != true)
 		pSkelEntity = cl_entitylist->GetBaseEntityFromHandle(mh_parent_entity)->GetBaseAnimating();
@@ -179,6 +178,8 @@ rapidjson::Value CzmqBaseSkeletal::GetEntityData(rapidjson::MemoryPoolAllocator<
 
 			pPhysBone->GetPositionMatrix(&boneToWorld);
 		}
+		else
+			pSkelEntity->GetBoneTransform(i, boneToWorld);
 #else
 
 		pSkelEntity->GetBoneTransform(i, boneToWorld);
