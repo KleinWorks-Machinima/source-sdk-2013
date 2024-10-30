@@ -521,6 +521,26 @@ public:
 		}
 
 #if !defined( CLIENT_DLL )
+		/*========================*/
+		/*| KLEINWORKS™ ADDITION |*/
+
+		// KleinWorks hook for recording sounds
+		CzmqManager::OnSoundPlayed(
+			entindex,
+			ep.m_pSoundName,
+			ep.m_SoundLevel,
+			ep.m_flVolume,
+			ep.m_nFlags,
+			ep.m_nPitch,
+			ep.m_pOrigin,
+			ep.m_flSoundTime,
+			ep.m_pflSoundDuration,
+			ep.m_UtlVecSoundOrigin);
+
+
+		/*| KLEINWORKS™ ADDITION |*/
+		/*========================*/
+
 		bool bSwallowed = CEnvMicrophone::OnSoundPlayed( 
 			entindex, 
 			params.soundname, 
@@ -998,6 +1018,26 @@ public:
 
 #if !defined( CLIENT_DLL )
 		CUtlVector< Vector > dummyorigins;
+
+		/*========================*/
+		/*| KLEINWORKS™ ADDITION |*/
+
+		// KleinWorks hook for recording sounds
+		CzmqManager::OnSoundPlayed(
+						entindex,
+						pSample,
+						soundlevel,
+						volume,
+						flags,
+						pitch,
+						&origin,
+						soundtime,
+						nullptr,
+						dummyorigins);
+
+
+		/*| KLEINWORKS™ ADDITION |*/
+		/*========================*/
 
 		// Loop through all registered microphones and tell them the sound was just played
 		// NOTE: This means that pitch shifts/sound changes on the original ambient will not be reflected in the re-broadcasted sound
