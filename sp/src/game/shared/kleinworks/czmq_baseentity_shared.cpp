@@ -169,11 +169,11 @@ bool CzmqBaseEntity::IsValid()
 	if (!mh_parent_entity.IsValid())
 		return false;
 
-	if (mh_parent_entity.Get() == nullptr)
-		return false;
+	//if (mh_parent_entity.Get() == nullptr)
+	//	return false;
 
 #ifdef CLIENT_DLL
-	CBaseEntity* pEntity = cl_entitylist->GetBaseEntityFromHandle(mh_parent_entity);
+	CBaseEntity* pEntity = cl_entitylist->GetBaseEntity(mh_parent_entity.GetEntryIndex());
 #else
 	CBaseEntity* pEntity = gEntList.GetBaseEntity(mh_parent_entity);
 #endif // CLIENT_DLL

@@ -31,7 +31,7 @@ CzmqPointCamera::CzmqPointCamera(CBaseHandle hEntity)
 {
 
 #ifdef CLIENT_DLL
-	CBaseEntity* pEntity = cl_entitylist->GetBaseEntityFromHandle(hEntity);
+	CBaseEntity* pEntity = cl_entitylist->GetBaseEntity(hEntity.GetEntryIndex());
 
 	cl_entitylist->AddListenerEntity(this);
 #else
@@ -40,26 +40,12 @@ CzmqPointCamera::CzmqPointCamera(CBaseHandle hEntity)
 	gEntList.AddListenerEntity(this);
 #endif // CLIENT_DLL
 
-	// we have to do this to avoid taking a reference to GetDebugName() or GetModelName()
 
-	const char* modelname = modelinfo->GetModelName(pEntity->GetModel());
-
-	int ent_name_len = strlen(pEntity->GetDebugName());
-	int ent_modelname_len = strlen(modelname);
-
-	char* ent_name_proxystr = new char[ent_name_len + 1];
-	char* ent_modelname_proxystr = new char[ent_modelname_len + 1];
-
-	strcpy_s(ent_name_proxystr, ent_name_len + 1, pEntity->GetDebugName());
-	strcpy_s(ent_modelname_proxystr, ent_modelname_len + 1, modelname);
-
-
-	m_ent_name		 = ent_name_proxystr;
-	m_ent_model		 = ent_modelname_proxystr;
+	m_ent_name		 = "Camera";
+	m_ent_model		 = "None";
 	m_ent_id		 = hEntity.GetSerialNumber();
 	mh_parent_entity = hEntity;
 	m_ent_type		 = int(ENTREC_TYPES::POINT_CAMERA);
-
 
 	if (strcmp(pEntity->GetClassname(), "player") == 0) {
 
@@ -98,9 +84,9 @@ rapidjson::Value CzmqPointCamera::GetEntityData(rapidjson::MemoryPoolAllocator<>
 
 #ifdef CLIENT_DLL
 	if (m_bIsPlayerCamera) 
-		pPointCameraEntity = dynamic_cast<CBasePlayer*>(cl_entitylist->GetBaseEntityFromHandle(mh_parent_entity));
+		pPointCameraEntity = dynamic_cast<CBasePlayer*>(cl_entitylist->GetBaseEntity(mh_parent_entity.GetEntryIndex()));
 	else
-		pPointCameraEntity = dynamic_cast<CPointCamera*>(cl_entitylist->GetBaseEntityFromHandle(mh_parent_entity));
+		pPointCameraEntity = dynamic_cast<CPointCamera*>(cl_entitylist->GetBaseEntity(mh_parent_entity.GetEntryIndex()));
 #else
 	if (m_bIsPlayerCamera)
 		pPointCameraEntity = dynamic_cast<CBasePlayer*>(gEntList.GetBaseEntity(mh_parent_entity));
@@ -109,14 +95,9 @@ rapidjson::Value CzmqPointCamera::GetEntityData(rapidjson::MemoryPoolAllocator<>
 
 #endif // CLIENT_DLL
 
+	QAngle eyeAngles = pPointCameraEntity->EyeAngles();
 
-	// avoid taking a reference to the ID string by copying it
-	int	  id_strlen = strlen(CFmtStr("%d", m_ent_id)) + 1;
-
-	char* ent_id = new char[id_strlen];
-	strcpy_s(ent_id, id_strlen, CFmtStr("%d", m_ent_id).String());
-
-	entData_js.AddMember("ent_id", rapidjson::StringRef(ent_id), allocator);
+	entData_js.AddMember("ent_id", m_ent_id, allocator);
 
 
 	rapidjson::Value ent_pos_js = rapidjson::Value(rapidjson::kObjectType);
@@ -130,9 +111,11 @@ rapidjson::Value CzmqPointCamera::GetEntityData(rapidjson::MemoryPoolAllocator<>
 	ent_origin_js.AddMember("y", pPointCameraEntity->EyePosition().y, allocator);
 	ent_origin_js.AddMember("z", pPointCameraEntity->EyePosition().z, allocator);
 
-	ent_angles_js.AddMember("x", pPointCameraEntity->EyeAngles().x, allocator);
-	ent_angles_js.AddMember("y", pPointCameraEntity->EyeAngles().y, allocator);
-	ent_angles_js.AddMember("z", pPointCameraEntity->EyeAngles().z, allocator);
+	// converting it to a quat for transport, w is a junk value
+	ent_angles_js.AddMember("w", 1.0,		  allocator);
+	ent_angles_js.AddMember("x", eyeAngles.x, allocator);
+	ent_angles_js.AddMember("y", eyeAngles.y, allocator);
+	ent_angles_js.AddMember("z", eyeAngles.z, allocator);
 
 	ent_pos_js.AddMember("0", ent_origin_js, allocator);
 	ent_rot_js.AddMember("0", ent_angles_js, allocator);
