@@ -257,6 +257,12 @@ void CzmqManager::AddEntityToSelection(CBaseHandle hEntity)
 
 #ifdef CLIENT_DLL
 	CBaseEntity* pEntity = cl_entitylist->GetBaseEntity(hEntity.GetEntryIndex());
+
+	if (pEntity->IsServerEntity() && !pEntity->IsClient()) {
+		
+		Warning("%s: ERROR! Client attempted to select Server-side only entity! Aborting...\n", kleinworks_msg_header);
+		return;
+	}
 #else
 	CBaseEntity* pEntity = gEntList.GetBaseEntity(hEntity);
 

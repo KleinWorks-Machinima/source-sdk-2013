@@ -135,6 +135,9 @@ CON_COMMAND(kw_entrec_record, "Toggle for the KleinWorks EntRec system, 1 = reco
 			recordBool = false;
 	}
 
+	if (engine->IsPaused() == true)
+		Msg("kleinworks: Recording will %s when game is unpaused.\n", recordBool == true ? "start" : "stop");
+
 
 	cvar_kleinworks_record.SetValue(recordBool);
 }

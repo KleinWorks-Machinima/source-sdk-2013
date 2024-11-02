@@ -72,13 +72,18 @@ void ClientPutInServer(edict_t *pEdict, const char *playername)
 	/*| KLEINWORKS™ ADDITION |*/
 
 	// if there isnt an EntRecInterface entity, create one
-	CBaseEntity* pEntRecInterface = gEntList.FindEntityByClassname(gEntList.FirstEnt(), "entrec_interface");
+	CBaseEntity* pEnt = gEntList.FindEntityByClassname(gEntList.FirstEnt(), "entrec_interface");
 
-	if (pEntRecInterface == nullptr) {
+	if (pEnt == nullptr) {
 		Warning("kleinworks_WARNING: No entrec_interface entity was found, creating one now...\n");
-		CEntRec_Interface* entrecManager = new CEntRec_Interface();
 
-		entrecManager->Spawn();
+		CBaseEntity *pEntrecInterface = dynamic_cast< CBaseEntity * >(CreateEntityByName("entrec_interface"));
+		Assert(pEntrecInterface);
+
+		if (DispatchSpawn(pEntrecInterface) == -1)
+			Warning("\nkleinworks_ERROR: Failed to create entrec_interface entity!! Use 'ent_create entrec_interface' to spawn one manually.\n");
+		else
+			pEntrecInterface->Activate();
 	}
 
 	/*| KLEINWORKS™ ADDITION |*/
